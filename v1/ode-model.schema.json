@@ -1,0 +1,231 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Computational-Biology-Aachen/mxl-schemas/main/v1/ode-model.schema.json",
+  "title": "Mxl ode model format",
+  "description": "Version-controllable JSON representation of an ODE mechanistic model, shared between mxlpy and mxlweb. The time derivative of each variable is encoded directly on the variable (dx/dt) rather than derived from reactions. Rate expressions are stored as trees of math nodes from the shared MathML node set.",
+  "type": "object",
+  "required": [
+    "spec_version",
+    "model_id",
+    "model"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "URI of this schema, for editor tooling."
+    },
+    "spec_version": {
+      "type": "string",
+      "description": "Version of the .mxl.json format.",
+      "const": "1.0"
+    },
+    "model_id": {
+      "type": "string",
+      "description": "Identifier of the model."
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of the model."
+    },
+    "model": {
+      "type": "object",
+      "required": [
+        "variables",
+        "parameters",
+        "derived",
+        "readouts"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "variables": {
+          "type": "object",
+          "description": "State variables keyed by name.",
+          "additionalProperties": {
+            "$ref": "#/$defs/variable"
+          }
+        },
+        "parameters": {
+          "type": "object",
+          "description": "Constant parameters keyed by name.",
+          "additionalProperties": {
+            "$ref": "#/$defs/parameter"
+          }
+        },
+        "derived": {
+          "type": "object",
+          "description": "Derived quantities keyed by name.",
+          "additionalProperties": {
+            "$ref": "#/$defs/derived"
+          }
+        },
+        "readouts": {
+          "type": "object",
+          "description": "Readouts keyed by name.",
+          "additionalProperties": {
+            "$ref": "#/$defs/readout"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "variable": {
+      "type": "object",
+      "description": "A state variable with an initial value and its time derivative (dx/dt) encoded directly.",
+      "required": [
+        "value",
+        "fn"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "$ref": "#/$defs/node",
+          "description": "Initial value: a constant (Num node) or an initial-assignment expression."
+        },
+        "fn": {
+          "$ref": "#/$defs/node",
+          "description": "Time derivative dx/dt of the variable."
+        }
+      }
+    },
+    "parameter": {
+      "type": "object",
+      "description": "A constant parameter.",
+      "required": [
+        "value"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "$ref": "#/$defs/node",
+          "description": "Value: a constant (Num node) or an initial-assignment expression."
+        }
+      }
+    },
+    "derived": {
+      "type": "object",
+      "description": "A quantity computed from other model entities at each time point.",
+      "required": [
+        "fn"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "fn": {
+          "$ref": "#/$defs/node",
+          "description": "Expression computing the derived value."
+        }
+      }
+    },
+    "readout": {
+      "type": "object",
+      "description": "A quantity computed for reporting only; it does not feed back into the dynamics.",
+      "required": [
+        "fn"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "fn": {
+          "$ref": "#/$defs/node",
+          "description": "Expression computing the readout value."
+        }
+      }
+    },
+    "node": {
+      "type": "object",
+      "description": "A math expression node. The 'type' discriminator selects the operand fields.",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "value": {
+          "type": [
+            "number",
+            "string",
+            "boolean"
+          ],
+          "description": "Payload of a leaf node (Num/Name/Bool)."
+        },
+        "child": {
+          "$ref": "#/$defs/node"
+        },
+        "base": {
+          "$ref": "#/$defs/node"
+        },
+        "left": {
+          "$ref": "#/$defs/node"
+        },
+        "right": {
+          "$ref": "#/$defs/node"
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/node"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Num"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "value"
+            ],
+            "properties": {
+              "value": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Name"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "value"
+            ],
+            "properties": {
+              "value": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Bool"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "value"
+            ],
+            "properties": {
+              "value": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
