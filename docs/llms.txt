@@ -1,0 +1,179 @@
+# mxl-schemas
+
+> Canonical JSON Schema definitions for the mxl* tool family ([mxlpy](https://github.com/Computational-Biology-Aachen/mxlpy), [mxlweb](https://github.com/Computational-Biology-Aachen/mxlweb)). Provides two model formats — kinetic (reactions + stoichiometry) and ODE (direct dx/dt encoding) — both expressed as trees of math nodes. Maintained by the Computational Biology group at RWTH Aachen.
+
+## Model formats
+
+### Kinetic model (`kinetic-model.schema.json`)
+
+The kinetic format encodes dx/dt as **reactions × stoichiometry** (dx/dt = N*v). Each reaction has a rate expression (fn) and a per-variable stoichiometry map. The solver computes time derivatives from the reaction network.
+
+Sections: `variables`, `parameters`, `reactions`, `derived`, `readouts`.
+
+### ODE model (`ode-model.schema.json`)
+
+The ODE format encodes dx/dt **directly on each variable** via a `fn` field. No reactions or stoichiometry — the derivative is a single expression tree. Useful for models not naturally expressed as reaction networks.
+
+Sections: `variables` (with fn), `parameters`, `derived`, `readouts`.
+
+## Math node tree
+
+All expressions (rates, derived, readouts, initial values, stoichiometry) are stored as recursive trees of nodes. Each node has a `type` discriminator:
+
+| type     | value       | Children        | Meaning                           |
+| -------- | ----------- | --------------- | --------------------------------- |
+| `Num`    | `number`    | —               | Numeric literal                   |
+| `Name`   | `string`    | —               | Reference to a variable/parameter |
+| `Bool`   | `boolean`   | —               | Boolean literal                   |
+| unary    | —           | `child`         | Single operand (e.g. negation)    |
+| binary   | —           | `left`, `right` | Two operands (e.g. `+`, `*`)      |
+| nary     | —           | `children`      | N operands (e.g. `+`, `*`)        |
+
+Binary nodes also accept a `base` field for exponentiation (`Pow`).
+
+## Example: kinetic model
+
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/Computational-Biology-Aachen/mxl-schemas/main/v1/kinetic-model.schema.json",
+  "spec_version": "1.0",
+  "model_id": "simple_enzyme",
+  "description": "Michaelis-Menten enzyme kinetics",
+  "model": {
+    "variables": {
+      "S": { "value": { "type": "Num", "value": 10.0 } },
+      "P": { "value": { "type": "Num", "value": 0.0 } }
+    },
+    "parameters": {
+      "vmax": { "value": { "type": "Num", "value": 5.0 } },
+      "km":   { "value": { "type": "Num", "value": 2.0 } }
+    },
+    "reactions": {
+      "v1": {
+        "fn": {
+          "type": "Div",
+          "left": {
+            "type": "Mul",
+            "children": [
+              { "type": "Name", "value": "vmax" },
+              { "type": "Name", "value": "S" }
+            ]
+          },
+          "right": {
+            "type": "Add",
+            "children": [
+              { "type": "Name", "value": "km" },
+              { "type": "Name", "value": "S" }
+            ]
+          }
+        },
+        "stoichiometry": {
+          "S": { "type": "Num", "value": -1 },
+          "P": { "type": "Num", "value": 1 }
+        }
+      }
+    },
+    "derived": {
+      "flux": {
+        "fn": { "type": "Name", "value": "v1" }
+      }
+    },
+    "readouts": {
+      "total": {
+        "fn": {
+          "type": "Add",
+          "children": [
+            { "type": "Name", "value": "S" },
+            { "type": "Name", "value": "P" }
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+## Example: ODE model
+
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/Computational-Biology-Aachen/mxl-schemas/main/v1/ode-model.schema.json",
+  "spec_version": "1.0",
+  "model_id": "decay",
+  "description": "Simple exponential decay",
+  "model": {
+    "variables": {
+      "x": {
+        "value": { "type": "Num", "value": 1.0 },
+        "fn": {
+          "type": "Mul",
+          "children": [
+            { "type": "Num", "value": -0.5 },
+            { "type": "Name", "value": "x" }
+          ]
+        }
+      }
+    },
+    "parameters": {},
+    "derived": {},
+    "readouts": {}
+  }
+}
+```
+
+## Installation & usage
+
+### npm (schema package)
+
+```bash
+npm install @computational-biology-aachen/mxl-schemas
+```
+
+### Python (mxlpy import/export)
+
+```python
+import mxlpy
+
+mxlpy.save(model, "model.mxl.json")
+model = mxlpy.load("model.mxl.json")
+```
+
+### Validation
+
+```bash
+# Python
+pip install check-jsonschema
+check-jsonschema --schemafile v1/kinetic-model.schema.json path/to/model.mxl.json
+
+# Node
+npm install -g ajv-cli
+ajv validate -s v1/kinetic-model.schema.json -d path/to/model.mxl.json
+```
+
+### Editor integration (VS Code)
+
+Add to `.vscode/settings.json`:
+
+```json
+{
+  "json.schemas": [
+    {
+      "fileMatch": ["*.mxl.json"],
+      "url": "https://raw.githubusercontent.com/Computational-Biology-Aachen/mxl-schemas/main/v1/kinetic-model.schema.json"
+    }
+  ]
+}
+```
+
+## MCP integration
+
+Use [mxl-mcp](https://computational-biology-aachen.github.io/mxl-mcp/mxlpy/latest) for LLM-driven model building and simulation via the Model Context Protocol.
+
+## Tool family
+
+- [mxlpy](https://github.com/Computational-Biology-Aachen/mxlpy) — Python mechanistic learning library (ODEs + ML)
+- [mxlbricks](https://github.com/Computational-Biology-Aachen/mxl-bricks) — Composable reaction building blocks
+- [mxlmodels](https://github.com/Computational-Biology-Aachen/mxl-models) — Pre-defined model library (generated from mxlbricks)
+- [mxlweb](https://github.com/Computational-Biology-Aachen/mxl-web) — Browser-based ODE solver (SvelteKit + WASM)
+- [pysbml](https://github.com/Computational-Biology-Aachen/pysbml) — SBML import/export bridge
+- [parameteriser](https://github.com/Computational-Biology-Aachen/parameteriser) — Kinetic parameter lookup (BRENDA DB)
