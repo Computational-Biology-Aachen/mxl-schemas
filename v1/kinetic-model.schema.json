@@ -6,6 +6,7 @@
   "type": "object",
   "required": [
     "spec_version",
+    "kind",
     "model_id",
     "model"
   ],
@@ -18,6 +19,11 @@
       "type": "string",
       "description": "Version of the .mxl.json format.",
       "const": "1.0"
+    },
+    "kind": {
+      "type": "string",
+      "description": "Discriminator identifying the model formulation; selects which schema applies.",
+      "const": "kinetic"
     },
     "model_id": {
       "type": "string",
@@ -88,6 +94,17 @@
         "value": {
           "$ref": "#/$defs/node",
           "description": "Initial value: a constant (Num node) or an initial-assignment expression."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Human-readable label for UI and code generation."
+        },
+        "texName": {
+          "type": "string",
+          "description": "LaTeX rendering of the symbol."
+        },
+        "slider": {
+          "$ref": "#/$defs/slider"
         }
       }
     },
@@ -102,6 +119,17 @@
         "value": {
           "$ref": "#/$defs/node",
           "description": "Value: a constant (Num node) or an initial-assignment expression."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Human-readable label for UI and code generation."
+        },
+        "texName": {
+          "type": "string",
+          "description": "LaTeX rendering of the symbol."
+        },
+        "slider": {
+          "$ref": "#/$defs/slider"
         }
       }
     },
@@ -116,6 +144,14 @@
         "fn": {
           "$ref": "#/$defs/node",
           "description": "Expression computing the derived value."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Human-readable label for UI and code generation."
+        },
+        "texName": {
+          "type": "string",
+          "description": "LaTeX rendering of the symbol."
         }
       }
     },
@@ -130,6 +166,14 @@
         "fn": {
           "$ref": "#/$defs/node",
           "description": "Expression computing the readout value."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Human-readable label for UI and code generation."
+        },
+        "texName": {
+          "type": "string",
+          "description": "LaTeX rendering of the symbol."
         }
       }
     },
@@ -152,6 +196,42 @@
           "additionalProperties": {
             "$ref": "#/$defs/node"
           }
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Human-readable label for UI and code generation."
+        },
+        "texName": {
+          "type": "string",
+          "description": "LaTeX rendering of the symbol."
+        }
+      }
+    },
+    "slider": {
+      "type": "object",
+      "description": "Interactive-slider configuration (mxlweb UI). Bounds are strings so the authored precision is preserved verbatim.",
+      "required": [
+        "min",
+        "max",
+        "step"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "min": {
+          "type": "string",
+          "description": "Lower bound of the slider."
+        },
+        "max": {
+          "type": "string",
+          "description": "Upper bound of the slider."
+        },
+        "step": {
+          "type": "string",
+          "description": "Increment between slider positions."
+        },
+        "desc": {
+          "type": "string",
+          "description": "Optional tooltip / description for the slider."
         }
       }
     },

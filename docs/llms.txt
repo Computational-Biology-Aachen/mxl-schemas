@@ -1,24 +1,53 @@
 # mxl-schemas
 
-> Canonical JSON Schema definitions for the mxl* tool family ([mxlpy](https://github.com/Computational-Biology-Aachen/mxlpy), [mxlweb](https://github.com/Computational-Biology-Aachen/mxlweb)). Provides two model formats — kinetic (reactions + stoichiometry) and ODE (direct dx/dt encoding) — both expressed as trees of math nodes. Maintained by the Computational Biology group at RWTH Aachen.
+> Canonical JSON Schema definitions for the mxl* tool family ([mxlpy](https://github.com/Computational-Biology-Aachen/mxlpy), [mxlweb](https://github.com/Computational-Biology-Aachen/mxlweb)). Provides three model formats — kinetic (reactions + stoichiometry), ODE (direct dx/dt encoding), and steady-state (algebraic outputs) — all expressed as trees of math nodes. Maintained by the Computational Biology group at RWTH Aachen.
+
+## Envelope and discriminator
+
+Every `.mxl.json` file shares one outer shape. A required top-level `kind` field discriminates the formulation, so consumers select the right schema without sniffing structure:
+
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/Computational-Biology-Aachen/mxl-schemas/main/v1/<kind>-model.schema.json",
+  "spec_version": "1.0",
+  "kind": "kinetic | ode | steady-state",
+  "model_id": "my_model",
+  "description": "optional",
+  "model": { ... }
+}
+```
 
 ## Model formats
 
-### Kinetic model (`kinetic-model.schema.json`)
+### Kinetic model (`kind: "kinetic"`, `kinetic-model.schema.json`)
 
-The kinetic format encodes dx/dt as **reactions × stoichiometry** (dx/dt = N*v). Each reaction has a rate expression (fn) and a per-variable stoichiometry map. The solver computes time derivatives from the reaction network.
+Encodes dx/dt as **reactions × stoichiometry** (dx/dt = N*v). Each reaction has a rate expression (fn) and a per-variable stoichiometry map. The solver computes time derivatives from the reaction network.
 
 Sections: `variables`, `parameters`, `reactions`, `derived`, `readouts`.
 
-### ODE model (`ode-model.schema.json`)
+### ODE model (`kind: "ode"`, `ode-model.schema.json`)
 
-The ODE format encodes dx/dt **directly on each variable** via a `fn` field. No reactions or stoichiometry — the derivative is a single expression tree. Useful for models not naturally expressed as reaction networks.
+Encodes dx/dt **directly on each variable** via a `fn` field. No reactions or stoichiometry — the derivative is a single expression tree. Useful for models not naturally expressed as reaction networks.
 
 Sections: `variables` (with fn), `parameters`, `derived`, `readouts`.
 
+### Steady-state model (`kind: "steady-state"`, `steady-state-model.schema.json`)
+
+Algebraic model: no state variables and no time integration. The `derived` quantities are closed-form outputs of the parameters; any parameter can be swept as the independent axis. `readouts` is omitted because there are no dynamics for a report-only quantity to stay out of.
+
+Sections: `parameters`, `derived`.
+
+## Presentation metadata
+
+Every entity accepts optional presentation fields (a bare math-only file still validates):
+
+- `displayName` — human-readable label.
+- `texName` — LaTeX rendering of the symbol.
+- `slider` — `{ min, max, step, desc? }` interactive-slider config on `variable` / `parameter`; bounds are strings to preserve authored precision.
+
 ## Math node tree
 
-All expressions (rates, derived, readouts, initial values, stoichiometry) are stored as recursive trees of nodes. Each node has a `type` discriminator:
+All expressions (rates, derived, readouts, initial values, stoichiometry, derivatives) are stored as recursive trees of nodes. Each node has a `type` discriminator:
 
 | type     | value       | Children        | Meaning                           |
 | -------- | ----------- | --------------- | --------------------------------- |
@@ -26,10 +55,10 @@ All expressions (rates, derived, readouts, initial values, stoichiometry) are st
 | `Name`   | `string`    | —               | Reference to a variable/parameter |
 | `Bool`   | `boolean`   | —               | Boolean literal                   |
 | unary    | —           | `child`         | Single operand (e.g. negation)    |
-| binary   | —           | `left`, `right` | Two operands (e.g. `+`, `*`)      |
+| binary   | —           | `left`, `right` | Two operands (`Pow`, `Implies`)   |
 | nary     | —           | `children`      | N operands (e.g. `+`, `*`)        |
 
-Binary nodes also accept a `base` field for exponentiation (`Pow`).
+`Log` and `Sqrt` carry a `child` plus a `base` field (base/degree).
 
 ## Example: kinetic model
 
@@ -37,6 +66,7 @@ Binary nodes also accept a `base` field for exponentiation (`Pow`).
 {
   "$schema": "https://raw.githubusercontent.com/Computational-Biology-Aachen/mxl-schemas/main/v1/kinetic-model.schema.json",
   "spec_version": "1.0",
+  "kind": "kinetic",
   "model_id": "simple_enzyme",
   "description": "Michaelis-Menten enzyme kinetics",
   "model": {
@@ -51,21 +81,23 @@ Binary nodes also accept a `base` field for exponentiation (`Pow`).
     "reactions": {
       "v1": {
         "fn": {
-          "type": "Div",
-          "left": {
-            "type": "Mul",
-            "children": [
-              { "type": "Name", "value": "vmax" },
-              { "type": "Name", "value": "S" }
-            ]
-          },
-          "right": {
-            "type": "Add",
-            "children": [
-              { "type": "Name", "value": "km" },
-              { "type": "Name", "value": "S" }
-            ]
-          }
+          "type": "Divide",
+          "children": [
+            {
+              "type": "Mul",
+              "children": [
+                { "type": "Name", "value": "vmax" },
+                { "type": "Name", "value": "S" }
+              ]
+            },
+            {
+              "type": "Add",
+              "children": [
+                { "type": "Name", "value": "km" },
+                { "type": "Name", "value": "S" }
+              ]
+            }
+          ]
         },
         "stoichiometry": {
           "S": { "type": "Num", "value": -1 },
@@ -99,6 +131,7 @@ Binary nodes also accept a `base` field for exponentiation (`Pow`).
 {
   "$schema": "https://raw.githubusercontent.com/Computational-Biology-Aachen/mxl-schemas/main/v1/ode-model.schema.json",
   "spec_version": "1.0",
+  "kind": "ode",
   "model_id": "decay",
   "description": "Simple exponential decay",
   "model": {
@@ -117,6 +150,51 @@ Binary nodes also accept a `base` field for exponentiation (`Pow`).
     "parameters": {},
     "derived": {},
     "readouts": {}
+  }
+}
+```
+
+## Example: steady-state model
+
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/Computational-Biology-Aachen/mxl-schemas/main/v1/steady-state-model.schema.json",
+  "spec_version": "1.0",
+  "kind": "steady-state",
+  "model_id": "mm_rate",
+  "description": "Michaelis-Menten rate as a function of its parameters",
+  "model": {
+    "parameters": {
+      "vmax": { "value": { "type": "Num", "value": 5.0 } },
+      "km":   { "value": { "type": "Num", "value": 2.0 } },
+      "S":    {
+        "value": { "type": "Num", "value": 1.0 },
+        "slider": { "min": "0", "max": "10", "step": "0.1" }
+      }
+    },
+    "derived": {
+      "v": {
+        "fn": {
+          "type": "Divide",
+          "children": [
+            {
+              "type": "Mul",
+              "children": [
+                { "type": "Name", "value": "vmax" },
+                { "type": "Name", "value": "S" }
+              ]
+            },
+            {
+              "type": "Add",
+              "children": [
+                { "type": "Name", "value": "km" },
+                { "type": "Name", "value": "S" }
+              ]
+            }
+          ]
+        }
+      }
+    }
   }
 }
 ```
