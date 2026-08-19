@@ -38,12 +38,14 @@ Every model file shares the same outer shape:
 | `reactions`  |   ✓     | —   |      —       |
 | `derived`    |   ✓     | ✓   |      ✓       |
 | `readouts`   |   ✓     | ✓   |      —       |
+| `nn_blocks`  |   ✓     | ✓   |      —       |
 
 - **variables** — state variables with an initial `value`; in the ODE format each also carries its derivative `fn`.
 - **parameters** — constants with a `value`.
 - **reactions** — a rate `fn` and a per-variable `stoichiometry` map (kinetic only).
 - **derived** — quantities computed from other entities at each time point; in the steady-state format these are the model's outputs.
 - **readouts** — report-only quantities that do not feed back into the dynamics. Omitted from the steady-state format, which has no dynamics.
+- **nn_blocks** — UDE/NODE correction terms (mxlweb ADR 0005): a fully-connected softplus network added onto one or more variables' dynamics. Optional; weights/biases are ordinary `parameters` entries, this section only records the architecture (`inputs`, `depth`, `width`, `seed`, `targets`, `trained`) needed to regenerate or re-edit a block. Omitted from the steady-state format, which has no dynamics for a correction term to feed into.
 
 ### Presentation metadata
 
