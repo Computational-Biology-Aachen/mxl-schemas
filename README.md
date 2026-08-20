@@ -45,7 +45,7 @@ Every model file shares the same outer shape:
 - **reactions** — a rate `fn` and a per-variable `stoichiometry` map (kinetic only).
 - **derived** — quantities computed from other entities at each time point; in the steady-state format these are the model's outputs.
 - **readouts** — report-only quantities that do not feed back into the dynamics. Omitted from the steady-state format, which has no dynamics.
-- **nn_blocks** — UDE/NODE correction terms (mxlweb ADR 0005): a fully-connected softplus network added onto one or more variables' dynamics. Optional; weights/biases are ordinary `parameters` entries, this section only records the architecture (`inputs`, `depth`, `width`, `seed`, `targets`, `trained`) needed to regenerate or re-edit a block. Omitted from the steady-state format, which has no dynamics for a correction term to feed into.
+- **nn_blocks** — UDE/NODE correction terms (mxlweb ADR 0005): a fully-connected softplus network added onto one or more variables' dynamics. Optional; weights/biases are ordinary `parameters` entries, this section only records the architecture (`inputs`, `depth`, `width`, `seed`, `targets`, `trained`, `scale`) needed to regenerate or re-edit a block. `scale` is the initial value for the block's single trainable output-scaling factor (`dx/dt = f(x,p,t) + scale · NN(x,θ)`), added so a freshly-initialized larger network doesn't blow up the first fit iteration. Omitted from the steady-state format, which has no dynamics for a correction term to feed into.
 
 ### Presentation metadata
 

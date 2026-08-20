@@ -91,7 +91,8 @@
         "width",
         "seed",
         "targets",
-        "trained"
+        "trained",
+        "scale"
       ],
       "additionalProperties": false,
       "properties": {
@@ -126,6 +127,10 @@
         "trained": {
           "type": "boolean",
           "description": "Whether this block's weights are included when fitting the model."
+        },
+        "scale": {
+          "type": "number",
+          "description": "Initial value for the block's single trainable output-scaling factor: dx/dt = f(x,p,t) + scale * NN(x,\u03b8), shared across all of the block's outputs."
         }
       }
     },
