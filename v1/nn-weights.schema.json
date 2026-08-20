@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Computational-Biology-Aachen/mxl-schemas/main/v1/nn-weights.schema.json",
+  "title": "Mxl nn_block weights sidecar",
+  "description": "Trained weight/bias values for one nn_block, referenced by that block's weights_ref (kinetic-model.schema.json / ode-model.schema.json). Kept as a separate file from the model it belongs to: weight values carry no kinetic/biological meaning the way parameters do, and keeping them out of the model file keeps that file diffable and git-friendly regardless of a block's size. One layer's weight matrix has shape [out_features, in_features] (PyTorch/equinox-native; a Keras-backed consumer must transpose on import/export) and its bias vector has shape [out_features].",
+  "type": "object",
+  "patternProperties": {
+    "^w[0-9]+$": {
+      "type": "array",
+      "description": "Weight matrix for one layer (1-indexed, matching the corresponding nnBlock.layers position), shape [out_features, in_features].",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        }
+      }
+    },
+    "^b[0-9]+$": {
+      "type": "array",
+      "description": "Bias vector for one layer (1-indexed, matching the corresponding nnBlock.layers position), shape [out_features].",
+      "items": {
+        "type": "number"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "minProperties": 2
+}
