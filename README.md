@@ -23,7 +23,7 @@ Every model file shares the same outer shape:
 ```json
 {
   "$schema": "https://raw.githubusercontent.com/Computational-Biology-Aachen/mxl-schemas/main/v1/<kind>-model.schema.json",
-  "spec_version": "1.0",
+  "spec_version": "1.1",
   "kind": "kinetic | ode | steady-state",
   "model_id": "my_model",
   "description": "optional human-readable description",
@@ -62,6 +62,33 @@ Every entity accepts optional presentation fields so a model round-trips lossles
 - `slider` — `{ min, max, step, desc? }` interactive-slider config on `variable` / `parameter`. Bounds are **strings** so authored precision is preserved verbatim.
 
 All three are optional: a bare math-only file still validates.
+
+### Units (spec 1.1)
+
+`variable`, `parameter`, `derived`, `readout` and `reaction` entities accept an optional `unit`. A unit is a flat product of factors — the same model as an SBML `unitDefinition` — so every unit has one structure regardless of how it was written (`mol/l/s` and `mol/(l*s)` are the same thing):
+
+```json
+"unit": {
+  "factors": [
+    { "kind": "mole",   "prefix": "micro", "exponent": 1 },
+    { "kind": "metre",  "exponent": -2 },
+    { "kind": "second", "exponent": -1 }
+  ],
+  "multiplier": 1
+}
+```
+
+Value = `multiplier · ∏ (10^prefix · kind)^exponent`. `factors: []` is dimensionless. `multiplier` is optional (default 1) and only for scales no prefix can express.
+
+`kind` must be an id from the shared registry [`v1/units.json`](./v1/units.json) — SI/SBML base and derived units, `minute`/`hour`, and domain units used across the tool family (`mol_chl`, …) — or a **custom unit** declared in the model's own top-level `model.units` section:
+
+```json
+"units": { "OD600": { "description": "optical density at 600 nm" } }
+```
+
+Custom kinds are opaque base dimensions: mxlpy turns them into `sympy.physics.units.Quantity("OD600")`, SBML export writes them as `dimensionless`. A custom id must not shadow a registry id. Unknown kinds are an error in every consumer — nothing is silently dropped.
+
+`units.json` is the single source of truth for the vocabulary; it records each kind's display symbol, LaTeX, `sympy.physics.units` equivalent and SBML mapping. To add a unit, add it here first, then update the vendored copies (mxlweb-core `src/units/registry.ts`, mxlpy `mxlpy.units.REGISTRY`), whose drift tests compare against this file. [`tests/units.fixtures.json`](./tests/units.fixtures.json) holds cross-language conversion cases that both consumers test against.
 
 ### Math node tree
 

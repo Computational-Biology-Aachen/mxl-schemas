@@ -9,7 +9,7 @@ Every `.mxl.json` file shares one outer shape. A required top-level `kind` field
 ```json
 {
   "$schema": "https://raw.githubusercontent.com/Computational-Biology-Aachen/mxl-schemas/main/v1/<kind>-model.schema.json",
-  "spec_version": "1.0",
+  "spec_version": "1.1",
   "kind": "kinetic | ode | steady-state",
   "model_id": "my_model",
   "description": "optional",
@@ -45,6 +45,10 @@ Every entity accepts optional presentation fields (a bare math-only file still v
 - `texName` — LaTeX rendering of the symbol.
 - `slider` — `{ min, max, step, desc? }` interactive-slider config on `variable` / `parameter`; bounds are strings to preserve authored precision.
 
+## Units (spec 1.1)
+
+`variable`, `parameter`, `derived`, `readout` and `reaction` accept an optional `unit`: `{ "factors": [{ "kind", "prefix"?, "exponent" }], "multiplier"? }` (the SBML unitDefinition model; value = multiplier · ∏ (10^prefix · kind)^exponent; `factors: []` = dimensionless). E.g. µmol·m⁻²·s⁻¹ is `{"factors":[{"kind":"mole","prefix":"micro","exponent":1},{"kind":"metre","exponent":-2},{"kind":"second","exponent":-1}]}`. `kind` is an id from the shared registry `v1/units.json` or a custom kind declared in `model.units` (`{ "<id>": { symbol?, tex?, description? } }`), which consumers treat as an opaque base dimension. Unknown kinds are an error.
+
 ## Math node tree
 
 All expressions (rates, derived, readouts, initial values, stoichiometry, derivatives) are stored as recursive trees of nodes. Each node has a `type` discriminator:
@@ -65,7 +69,7 @@ All expressions (rates, derived, readouts, initial values, stoichiometry, deriva
 ```json
 {
   "$schema": "https://raw.githubusercontent.com/Computational-Biology-Aachen/mxl-schemas/main/v1/kinetic-model.schema.json",
-  "spec_version": "1.0",
+  "spec_version": "1.1",
   "kind": "kinetic",
   "model_id": "simple_enzyme",
   "description": "Michaelis-Menten enzyme kinetics",
@@ -130,7 +134,7 @@ All expressions (rates, derived, readouts, initial values, stoichiometry, deriva
 ```json
 {
   "$schema": "https://raw.githubusercontent.com/Computational-Biology-Aachen/mxl-schemas/main/v1/ode-model.schema.json",
-  "spec_version": "1.0",
+  "spec_version": "1.1",
   "kind": "ode",
   "model_id": "decay",
   "description": "Simple exponential decay",
@@ -159,7 +163,7 @@ All expressions (rates, derived, readouts, initial values, stoichiometry, deriva
 ```json
 {
   "$schema": "https://raw.githubusercontent.com/Computational-Biology-Aachen/mxl-schemas/main/v1/steady-state-model.schema.json",
-  "spec_version": "1.0",
+  "spec_version": "1.1",
   "kind": "steady-state",
   "model_id": "mm_rate",
   "description": "Michaelis-Menten rate as a function of its parameters",
