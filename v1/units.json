@@ -34,8 +34,10 @@
     { "id": "weber", "symbol": "Wb", "tex": "\\mathrm{Wb}", "sympy": "su.weber", "sbml": { "kind": "weber", "multiplier": 1 } },
     { "id": "minute", "symbol": "min", "tex": "\\mathrm{min}", "sympy": "su.minute", "sbml": { "kind": "second", "multiplier": 60 } },
     { "id": "hour", "symbol": "h", "tex": "\\mathrm{h}", "sympy": "su.hour", "sbml": { "kind": "second", "multiplier": 3600 } },
+    { "id": "bar", "symbol": "bar", "tex": "\\mathrm{bar}", "sympy": "su.bar", "sbml": { "kind": "pascal", "multiplier": 100000 } },
     { "id": "celsius", "symbol": "°C", "tex": "{}^{\\circ}\\mathrm{C}", "sympy": null, "abbrev": "°C", "sbml": null },
-    { "id": "mol_chl", "symbol": "mol Chl", "tex": "\\mathrm{mol}_{\\mathrm{Chl}}", "sympy": null, "abbrev": "mol_chl", "sbml": null }
+    { "id": "mol_chl", "symbol": "mol Chl", "tex": "\\mathrm{mol}_{\\mathrm{Chl}}", "sympy": null, "abbrev": "mol_chl", "sbml": null },
+    { "id": "einstein", "symbol": "E", "tex": "\\mathrm{E}", "sympy": null, "abbrev": "E", "sbml": { "kind": "mole", "multiplier": 1 } }
   ],
   "prefixes": [
     { "id": "yotta", "symbol": "Y", "scale": 24 },

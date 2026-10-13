@@ -80,7 +80,7 @@ All three are optional: a bare math-only file still validates.
 
 Value = `multiplier · ∏ (10^prefix · kind)^exponent`. `factors: []` is dimensionless. `multiplier` is optional (default 1) and only for scales no prefix can express.
 
-`kind` must be an id from the shared registry [`v1/units.json`](./v1/units.json) — SI/SBML base and derived units, `minute`/`hour`, and domain units used across the tool family (`mol_chl`, …) — or a **custom unit** declared in the model's own top-level `model.units` section:
+`kind` must be an id from the shared registry [`v1/units.json`](./v1/units.json) — SI/SBML base and derived units, `minute`/`hour`/`bar`, and domain units used across the tool family (`mol_chl`, `einstein` = mol photons, …) — or a **custom unit** declared in the model's own top-level `model.units` section:
 
 ```json
 "units": { "OD600": { "description": "optical density at 600 nm" } }
