@@ -90,6 +90,10 @@ Custom kinds are opaque base dimensions: mxlpy turns them into `sympy.physics.un
 
 `units.json` is the single source of truth for the vocabulary; it records each kind's display symbol, LaTeX, `sympy.physics.units` equivalent and SBML mapping. To add a unit, add it here first, then update the vendored copies (mxlweb-core `src/units/registry.ts`, mxlpy `mxlpy.units.REGISTRY`), whose drift tests compare against this file. [`tests/units.fixtures.json`](./tests/units.fixtures.json) holds cross-language conversion cases that both consumers test against.
 
+### Identifiers
+
+Entity ids are free-form strings in mxlpy (`"CO2 (dissolved)"`), but every code exporter needs them as identifiers. [`v1/identifiers.json`](./v1/identifiers.json) defines the one canonical mapping both mxlpy and mxlweb-core use, so a model has the same ids in Python and JavaScript: ASCII `[A-Za-z_][A-Za-z0-9_]*` (WAT locals are ASCII-only), Greek and a few Latin letters transliterated (`Δψ` → `Deltapsi`), biochemical symbols spelled out (`P700+FA-` → `P700_plus_FA_minus`, `Fd*` → `Fd_star`, `ATP/tot` → `ATP_per_tot`; a `-` between letters is a hyphen: `Light-harvesting` → `Light_harvesting`), other invalid runs collapsed to `_`, and a `_` suffix for Python/JavaScript keywords and names the generated code uses itself (`time`, `m`, `pars`, `Math`, …). Two names of one model mapping to the same identifier is an error. The rules are idempotent: a canonical id maps to itself. [`tests/identifiers.fixtures.json`](./tests/identifiers.fixtures.json) holds the cross-language cases both consumers test against.
+
 ### Math node tree
 
 All expressions (rates, derived, readouts, initial values, stoichiometry, derivatives) are recursive trees of nodes under `$defs/node`. Each node has a `type` discriminator:
