@@ -1,0 +1,31 @@
+{
+  "$comment": "Canonical identifier rules shared by mxlpy and mxlweb-core. Every exporter that turns a model name into code (mxlpy -> mxlweb model.ts, mxlweb -> mxlpy/python/JS/WAT) maps names through `canonical`, so the same model has the same ids in Python and JavaScript. A canonical id matches `pattern` (ASCII only: WAT locals are `$id`) and is not in `reserved`. `canonical(raw)`: (1) return raw if already canonical; (2) Unicode NFKD, drop combining marks (category M*); (3) replace each character found in `transliterate`; (4) replace each `-` that ends a token (followed by a character outside [A-Za-z0-9] or the end; regex `-(?=[^A-Za-z0-9]|$)`) by ` minus `, then each character in `symbols` by ` <word> ` (a `-` between letters/digits is a hyphen and handled by step 6); (5) strip leading/trailing runs outside [A-Za-z0-9_]; (6) replace each remaining run of non-alphanumerics that contains at least one character outside [A-Za-z0-9_] (regex `[^A-Za-z0-9]*[^A-Za-z0-9_][^A-Za-z0-9]*`) by a single `_`; (7) empty -> `_`; (8) leading digit -> prefix `_`; (9) result in `reserved` -> suffix `_`. Mapping a whole model (`canonical_map`): every name maps to canonical(name); two names of one model mapping to the same identifier is an error, never resolved by renaming. Consumers vendor `reserved`, `transliterate` and `symbols`; their drift tests compare against this file, and `tests/identifiers.fixtures.json` holds the cross-language cases.",
+  "version": "1.0",
+  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+  "reserved": [
+    "False", "None", "True", "and", "as", "assert", "async", "await", "break", "class",
+    "continue", "def", "del", "elif", "else", "except", "finally", "for", "from", "global",
+    "if", "import", "in", "is", "lambda", "nonlocal", "not", "or", "pass", "raise",
+    "return", "try", "while", "with", "yield",
+    "Infinity", "NaN", "arguments", "case", "catch", "const", "debugger", "default", "delete", "do",
+    "enum", "eval", "export", "extends", "false", "function", "implements", "instanceof", "interface", "let",
+    "new", "null", "package", "private", "protected", "public", "static", "super", "switch", "this",
+    "throw", "true", "typeof", "undefined", "var", "void",
+    "Math", "all", "all_derived", "derived", "eqx", "get_model", "jax", "jnp", "m", "math",
+    "model", "np", "pars", "selected_derived", "time", "variables"
+  ],
+  "symbols": { "+": "plus", "*": "star", "/": "per" },
+  "transliterate": {
+    "α": "alpha", "β": "beta", "γ": "gamma", "δ": "delta", "ε": "epsilon", "ζ": "zeta",
+    "η": "eta", "θ": "theta", "ι": "iota", "κ": "kappa", "λ": "lambda", "μ": "mu",
+    "ν": "nu", "ξ": "xi", "ο": "omicron", "π": "pi", "ρ": "rho", "σ": "sigma",
+    "ς": "sigma", "τ": "tau", "υ": "upsilon", "φ": "phi", "χ": "chi", "ψ": "psi",
+    "ω": "omega",
+    "Α": "Alpha", "Β": "Beta", "Γ": "Gamma", "Δ": "Delta", "Ε": "Epsilon", "Ζ": "Zeta",
+    "Η": "Eta", "Θ": "Theta", "Ι": "Iota", "Κ": "Kappa", "Λ": "Lambda", "Μ": "Mu",
+    "Ν": "Nu", "Ξ": "Xi", "Ο": "Omicron", "Π": "Pi", "Ρ": "Rho", "Σ": "Sigma",
+    "Τ": "Tau", "Υ": "Upsilon", "Φ": "Phi", "Χ": "Chi", "Ψ": "Psi", "Ω": "Omega",
+    "ß": "ss", "æ": "ae", "Æ": "AE", "œ": "oe", "Œ": "OE", "ø": "o", "Ø": "O",
+    "ł": "l", "Ł": "L", "đ": "d", "Đ": "D", "þ": "th", "Þ": "Th"
+  }
+}
