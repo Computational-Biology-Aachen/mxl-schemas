@@ -108,6 +108,67 @@ All expressions (rates, derived, readouts, initial values, stoichiometry, deriva
 | `Log`, `Sqrt`     | `child`, `base`  | Operand plus base/degree          |
 | n-ary (`Add`, …)  | `children`       | Variadic operands                 |
 
+## Analyses
+
+[`v1/analysis.schema.json`](./v1/analysis.schema.json) (`kind: "analysis"`, `spec_version: "1.0"`) describes what is done *with* a model: simulations, data handling, plots and checks, as plain data any backend can run. GreenSloth runs them in the browser and exports them as MxlPy notebooks; the two are held to the same reference values. It is deliberately much smaller than SED-ML: no fitting, sampling or sensitivity analysis yet.
+
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/Computational-Biology-Aachen/mxl-schemas/main/v1/analysis.schema.json",
+  "spec_version": "1.0",
+  "kind": "analysis",
+  "model": { "model_id": "poolman2000", "kind": "kinetic" },
+  "analyses": [
+    {
+      "id": "fig3",
+      "title": "Effect of cytosolic phosphate",
+      "simulate": { "kind": "steadyState" },
+      "scans": { "scan": { "over": { "Orthophosphate_external": [0.05, 0.1, 0.2] }, "columns": ["ex_g1p"] } },
+      "plots": [{ "type": "line", "x": "scan.x", "y": [{ "of": "scan.ex_g1p", "label": "Starch flux" }] }]
+    }
+  ]
+}
+```
+
+An analysis file is bound to one model. Each entry in `analyses` is one figure or experiment:
+
+| Section | What it gives |
+| --- | --- |
+| `scenarios` | Named runs of modified copies of the model (`parameters`, `initial`, structural `edits`, `simulate`, unrecorded `pre` runs, chained `stages`). Columns: `<scenario>.<column>` |
+| `simulate` | Default run: `timeCourse` (`tEval`), `protocol` (steps holding parameter values, `pointsPerStep` or `tEval`) or `steadyState` |
+| `scans` | One run per row of scanned values (`over`, relative `scale`, `grid` for a cartesian product); the final values of `columns` form the table `<name>.x`, `<name>.index`, `<name>.<column>` |
+| `mca` | Response coefficients (outputs at steady state vs parameters) and parameter or variable elasticities (rates vs parameters or variables), by central differences as MxlPy's `mca`. Table: `<name>.x` (index into `wrt`), `<name>.<output>` |
+| `stability` | Jacobian eigenvalues at the steady state, sorted by real then imaginary part. Table: `<name>.x`, `<name>.real`, `<name>.imag` |
+| `deriveEach`, `ops` | Per-scenario columns: expressions, and named ops (below) |
+| `collect`, `derive` | Tables and columns across scenarios |
+| `plots` (optional) | `line`, `scatter`, `stackedBar`, `heatmap` over expressions |
+| `golden` (optional) | Series checked against stored reference values, by max \|sim − reference\| / range(reference) (default tolerance 0.01) |
+
+**Which analyses a model kind allows.** This depends on what the model has: time, variables and reactions. The schema enforces it from `model.kind`; checking that ids exist in the model is left to consumers.
+
+| Needs | kinetic | ode | steady-state | Analyses |
+| --- | :-: | :-: | :-: | --- |
+| — | ✓ | ✓ | ✓ | `steadyState` (a steady-state model is evaluated), steady-state scans, response coefficients, parameter changes, `setAssignment`, `addParameter`, `parameterToAssignment`, expressions, tables, plots |
+| time | ✓ | ✓ | — | `timeCourse`, `protocol`, `pre`, `stages`, time-course scans, named ops, `returnRhs` |
+| variables | ✓ | ✓ | — | `initial`, `clampVariable`, `stability`, elasticities at a variable state |
+| reactions | ✓ | — | — | `removeReaction`, parameter and variable elasticities |
+
+### Expressions
+
+Analyses use short expression strings rather than math node trees, since they refer to result columns, not model entities:
+
+- numbers (`1`, `2.5e-3`), `+ - * / ^` (`^` is right-associative and binds tighter than unary minus: `-k ^ 2` is `-(k^2)`), parentheses
+- references: `col` (inside a scenario), `scenario.col`, `table.col`, `param.<id>` and `init.<id>` (the model's defaults), `data.<name>`, `ddt.<variable>`
+- element-wise: `log10 log2 ln exp sqrt abs sin`
+- aggregates, reducing an array to a number: `mean sum min max first last std` (`std` uses ddof = 1)
+- `at(col, t, times)` (the value of `col` at the sample of `times` nearest `t`), `nth(col, i)` (0-based), `slice(col, from, to)` (end exclusive), `ifgt(a, b, x, y)` (`x` if `a > b`, else `y`)
+
+Arrays combine element-wise and must have equal lengths; a number broadcasts. [`tests/expressions.fixtures.json`](./tests/expressions.fixtures.json) holds cross-language cases.
+
+### Named ops
+
+An `ops` entry other than `column` names an operation over one scenario's table, with its arguments as plain column names: `pamNpq` (NPQ from a PAM protocol's saturating pulses), `peaks`, `valleys`, `gaussianSmooth`, `gradient`, `diff`, `cumTrapz`, `ojip` (O-J-I-P points of a fluorescence rise) and `range` (a time window). They follow numpy/scipy semantics (`scipy.signal.find_peaks`, `gaussian_filter1d`, `numpy.gradient`, `cumulative_trapezoid`). [`tests/analysis.fixtures.json`](./tests/analysis.fixtures.json) holds valid and invalid analysis documents.
+
 ## Validation
 
 Install a CLI validator:
@@ -149,4 +210,4 @@ The `$id` of each schema is its canonical URL in this repository. Tools should r
 
 ## Contributing
 
-Schema changes that affect mxlpy or mxlweb must be coordinated with both consumers. Update the bundled copy in `mxlpy/src/mxlpy/schemas/` and the TypeScript node types in mxlweb alongside any change here.
+Schema changes that affect mxlpy or mxlweb must be coordinated with both consumers. Update the bundled copy in `mxlpy/src/mxlpy/schemas/` and the TypeScript node types in mxlweb alongside any change here. The analysis schema is vendored in GreenSloth (`src/lib/validation/analysis.schema.json`), whose tests fail when it drifts from this copy.

@@ -1,0 +1,718 @@
+{
+ "$comment": "Analysis documents (v1/analysis.schema.json) with whether a validator must accept them; invalid cases each break one rule.",
+ "cases": [
+  {
+   "name": "kinetic, every section",
+   "valid": true,
+   "document": {
+    "spec_version": "1.0",
+    "kind": "analysis",
+    "model": {
+     "model_id": "m",
+     "kind": "kinetic"
+    },
+    "analyses": [
+     {
+      "id": "timecourse",
+      "title": "Time course",
+      "simulate": {
+       "kind": "timeCourse",
+       "tEval": [
+        0,
+        1,
+        2
+       ]
+      },
+      "scenarios": {
+       "wt": {},
+       "ko": {
+        "edits": [
+         {
+          "removeReaction": "v1"
+         }
+        ],
+        "parameters": {
+         "k": "param.k * 2"
+        }
+       }
+      },
+      "deriveEach": {
+       "ratio": "x / y"
+      },
+      "ops": [
+       {
+        "op": "peaks",
+        "as": "p",
+        "of": "x"
+       },
+       {
+        "op": "column",
+        "as": "dx",
+        "expr": "x - first(x)"
+       }
+      ],
+      "plots": [
+       {
+        "type": "line",
+        "x": "wt.time",
+        "y": [
+         {
+          "of": "wt.x",
+          "label": "x"
+         },
+         {
+          "of": "ko.x",
+          "axis": "right"
+         }
+        ]
+       }
+      ],
+      "golden": {
+       "x_wt": {
+        "x": "wt.time",
+        "y": "wt.x"
+       }
+      }
+     },
+     {
+      "id": "protocol",
+      "scenarios": {
+       "light": {
+        "pre": [
+         {
+          "kind": "steadyState",
+          "set": {
+           "L": 0
+          }
+         }
+        ],
+        "simulate": {
+         "kind": "protocol",
+         "steps": [
+          {
+           "duration": 1,
+           "set": {
+            "L": 100
+           }
+          },
+          {
+           "duration": 2,
+           "set": {
+            "L": 0
+           },
+           "points": 20
+          }
+         ],
+         "pointsPerStep": 10
+        }
+       }
+      }
+     },
+     {
+      "id": "chain",
+      "scenarios": {
+       "c": {
+        "stages": [
+         {
+          "simulate": {
+           "kind": "timeCourse",
+           "tEval": [
+            0,
+            10
+           ]
+          }
+         },
+         {
+          "edits": [
+           {
+            "clampVariable": "x",
+            "to": 0.5
+           }
+          ],
+          "simulate": {
+           "kind": "timeCourse",
+           "tEval": [
+            0,
+            5
+           ]
+          }
+         }
+        ]
+       }
+      }
+     },
+     {
+      "id": "scan",
+      "simulate": {
+       "kind": "steadyState"
+      },
+      "scans": {
+       "s": {
+        "over": {
+         "k": [
+          1,
+          2,
+          3
+         ],
+         "L": [
+          0
+         ]
+        },
+        "columns": [
+         "x",
+         "v1"
+        ]
+       },
+       "g": {
+        "over": {
+         "a": [
+          1,
+          2
+         ],
+         "b": [
+          3,
+          4
+         ]
+        },
+        "grid": true,
+        "x": [
+         0,
+         1,
+         2,
+         3
+        ],
+        "columns": [
+         "x"
+        ],
+        "edits": [
+         {
+          "addParameter": "a",
+          "value": 0
+         },
+         {
+          "setAssignment": "d",
+          "to": "a * b"
+         }
+        ],
+        "simulate": {
+         "kind": "timeCourse",
+         "tEval": [
+          100
+         ]
+        }
+       }
+      },
+      "plots": [
+       {
+        "type": "heatmap",
+        "rows": [
+         "a"
+        ],
+        "columns": [
+         "b"
+        ],
+        "z": [
+         [
+          "nth(g.x, 0)"
+         ]
+        ]
+       }
+      ]
+     },
+     {
+      "id": "control",
+      "mca": {
+       "rc": {
+        "type": "responseCoefficients",
+        "wrt": [
+         "k"
+        ],
+        "outputs": [
+         "x",
+         "v1"
+        ],
+        "set": {
+         "L": 100
+        },
+        "displacement": 0.01
+       },
+       "ve": {
+        "type": "variableElasticities",
+        "wrt": [
+         "x"
+        ],
+        "outputs": [
+         "v1"
+        ],
+        "at": "steadyState"
+       },
+       "pe": {
+        "type": "parameterElasticities",
+        "wrt": [
+         "k"
+        ],
+        "outputs": [
+         "v1"
+        ],
+        "normalized": false
+       }
+      },
+      "stability": {
+       "ss": {
+        "set": {
+         "L": 100
+        }
+       }
+      },
+      "derive": {
+       "stable": "ifgt(max(ss.real), 0, 0, 1)"
+      },
+      "plots": [
+       {
+        "type": "scatter",
+        "series": [
+         {
+          "x": "ss.real",
+          "y": "ss.imag"
+         }
+        ]
+       },
+       {
+        "type": "stackedBar",
+        "categories": [
+         "k"
+        ],
+        "stacks": [
+         {
+          "label": "x",
+          "of": [
+           "nth(rc.x, 0)"
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "ode: time course, initial values, response coefficients, stability",
+   "valid": true,
+   "document": {
+    "spec_version": "1.0",
+    "kind": "analysis",
+    "model": {
+     "model_id": "m",
+     "kind": "ode"
+    },
+    "analyses": [
+     {
+      "id": "a",
+      "simulate": {
+       "kind": "timeCourse",
+       "tEval": [
+        0,
+        1
+       ]
+      },
+      "scenarios": {
+       "wt": {
+        "initial": {
+         "x": 2
+        }
+       }
+      },
+      "mca": {
+       "rc": {
+        "type": "responseCoefficients",
+        "wrt": [
+         "k"
+        ],
+        "outputs": [
+         "x"
+        ]
+       }
+      },
+      "stability": {
+       "ss": {}
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "steady-state: evaluation, scan, response coefficients, column op",
+   "valid": true,
+   "document": {
+    "spec_version": "1.0",
+    "kind": "analysis",
+    "model": {
+     "model_id": "m",
+     "kind": "steady-state"
+    },
+    "analyses": [
+     {
+      "id": "a",
+      "simulate": {
+       "kind": "steadyState"
+      },
+      "scenarios": {
+       "hi": {
+        "parameters": {
+         "k": 2
+        },
+        "edits": [
+         {
+          "setAssignment": "y",
+          "to": "k * 2"
+         }
+        ]
+       }
+      },
+      "scans": {
+       "s": {
+        "over": {
+         "k": [
+          1,
+          2,
+          3
+         ]
+        },
+        "columns": [
+         "y"
+        ]
+       }
+      },
+      "mca": {
+       "rc": {
+        "type": "responseCoefficients",
+        "wrt": [
+         "k"
+        ],
+        "outputs": [
+         "y"
+        ]
+       }
+      },
+      "ops": [
+       {
+        "op": "column",
+        "as": "z",
+        "expr": "y * 2"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "steady-state: no time course",
+   "valid": false,
+   "document": {
+    "spec_version": "1.0",
+    "kind": "analysis",
+    "model": {
+     "model_id": "m",
+     "kind": "steady-state"
+    },
+    "analyses": [
+     {
+      "id": "a",
+      "simulate": {
+       "kind": "timeCourse",
+       "tEval": [
+        1
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "steady-state: no time course in a scenario",
+   "valid": false,
+   "document": {
+    "spec_version": "1.0",
+    "kind": "analysis",
+    "model": {
+     "model_id": "m",
+     "kind": "steady-state"
+    },
+    "analyses": [
+     {
+      "id": "a",
+      "scenarios": {
+       "s": {
+        "simulate": {
+         "kind": "protocol",
+         "steps": [
+          {
+           "duration": 1,
+           "set": {}
+          }
+         ]
+        }
+       }
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "steady-state: no initial values",
+   "valid": false,
+   "document": {
+    "spec_version": "1.0",
+    "kind": "analysis",
+    "model": {
+     "model_id": "m",
+     "kind": "steady-state"
+    },
+    "analyses": [
+     {
+      "id": "a",
+      "scenarios": {
+       "s": {
+        "initial": {
+         "x": 1
+        }
+       }
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "steady-state: no stability",
+   "valid": false,
+   "document": {
+    "spec_version": "1.0",
+    "kind": "analysis",
+    "model": {
+     "model_id": "m",
+     "kind": "steady-state"
+    },
+    "analyses": [
+     {
+      "id": "a",
+      "stability": {
+       "s": {}
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "steady-state: no elasticities",
+   "valid": false,
+   "document": {
+    "spec_version": "1.0",
+    "kind": "analysis",
+    "model": {
+     "model_id": "m",
+     "kind": "steady-state"
+    },
+    "analyses": [
+     {
+      "id": "a",
+      "mca": {
+       "e": {
+        "type": "parameterElasticities",
+        "wrt": [
+         "k"
+        ],
+        "outputs": [
+         "y"
+        ]
+       }
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "steady-state: no time-series ops",
+   "valid": false,
+   "document": {
+    "spec_version": "1.0",
+    "kind": "analysis",
+    "model": {
+     "model_id": "m",
+     "kind": "steady-state"
+    },
+    "analyses": [
+     {
+      "id": "a",
+      "ops": [
+       {
+        "op": "peaks",
+        "as": "p",
+        "of": "y"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "ode: no removeReaction",
+   "valid": false,
+   "document": {
+    "spec_version": "1.0",
+    "kind": "analysis",
+    "model": {
+     "model_id": "m",
+     "kind": "ode"
+    },
+    "analyses": [
+     {
+      "id": "a",
+      "scenarios": {
+       "s": {
+        "edits": [
+         {
+          "removeReaction": "v1"
+         }
+        ]
+       }
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "ode: no elasticities",
+   "valid": false,
+   "document": {
+    "spec_version": "1.0",
+    "kind": "analysis",
+    "model": {
+     "model_id": "m",
+     "kind": "ode"
+    },
+    "analyses": [
+     {
+      "id": "a",
+      "mca": {
+       "e": {
+        "type": "variableElasticities",
+        "wrt": [
+         "x"
+        ],
+        "outputs": [
+         "v1"
+        ]
+       }
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "unknown field",
+   "valid": false,
+   "document": {
+    "spec_version": "1.0",
+    "kind": "analysis",
+    "model": {
+     "model_id": "m",
+     "kind": "kinetic"
+    },
+    "analyses": [
+     {
+      "id": "a",
+      "scenarioz": {}
+     }
+    ]
+   }
+  },
+  {
+   "name": "column op needs expr",
+   "valid": false,
+   "document": {
+    "spec_version": "1.0",
+    "kind": "analysis",
+    "model": {
+     "model_id": "m",
+     "kind": "kinetic"
+    },
+    "analyses": [
+     {
+      "id": "a",
+      "ops": [
+       {
+        "op": "column",
+        "as": "c"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "scan needs columns",
+   "valid": false,
+   "document": {
+    "spec_version": "1.0",
+    "kind": "analysis",
+    "model": {
+     "model_id": "m",
+     "kind": "kinetic"
+    },
+    "analyses": [
+     {
+      "id": "a",
+      "scans": {
+       "s": {
+        "over": {
+         "k": [
+          1
+         ]
+        }
+       }
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "scan can't run a protocol",
+   "valid": false,
+   "document": {
+    "spec_version": "1.0",
+    "kind": "analysis",
+    "model": {
+     "model_id": "m",
+     "kind": "kinetic"
+    },
+    "analyses": [
+     {
+      "id": "a",
+      "scans": {
+       "s": {
+        "over": {
+         "k": [
+          1
+         ]
+        },
+        "columns": [
+         "x"
+        ],
+        "simulate": {
+         "kind": "protocol",
+         "steps": [
+          {
+           "duration": 1,
+           "set": {}
+          }
+         ]
+        }
+       }
+      }
+     }
+    ]
+   }
+  }
+ ]
+}

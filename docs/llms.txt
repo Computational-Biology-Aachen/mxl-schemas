@@ -203,6 +203,22 @@ All expressions (rates, derived, readouts, initial values, stoichiometry, deriva
 }
 ```
 
+## Analyses (`kind: "analysis"`, `analysis.schema.json`)
+
+What is done with one model, as plain data: `{spec_version: "1.0", kind: "analysis", model: {model_id, kind}, analyses: [...]}`. Each analysis has an `id` and optionally:
+
+- `scenarios`: named runs of modified model copies (`parameters`, `initial`, `edits`, `simulate`, `pre`, `stages`, `allowFailure`); columns `<scenario>.<col>`
+- `simulate`: default run, `timeCourse` (`tEval`), `protocol` (`steps` of `{duration, set}`, `pointsPerStep` or `tEval`) or `steadyState`
+- `scans`: one run per row of `over` (absolute values), `scale` (factors on defaults), `grid` (cartesian product); table `<name>.x`, `<name>.index`, `<name>.<column>` of final values
+- `mca`: `responseCoefficients` | `parameterElasticities` | `variableElasticities` with `wrt`, `outputs`, `normalized`, `displacement`, `at`; table `<name>.x`, `<name>.<output>`
+- `stability`: Jacobian eigenvalues at steady state; table `<name>.real`, `<name>.imag`
+- `deriveEach`, `ops` (named ops: pamNpq, peaks, valleys, gaussianSmooth, gradient, diff, cumTrapz, ojip, range; or `{op: "column", as, expr}`), `collect`, `derive`
+- `plots` (`line`, `scatter`, `stackedBar`, `heatmap`) and `golden` (series checked against stored references, max |sim − ref| / range(ref) ≤ 0.01)
+
+Model kinds: a steady-state model has no time, variables or reactions (only `steadyState` evaluation, steady-state scans, response coefficients, parameter edits, expressions). An ODE model has no reactions (no `removeReaction`, no elasticities). The schema enforces both from `model.kind`.
+
+Expressions are strings: numbers, `+ - * / ^`, unary minus, parentheses; references `col`, `scenario.col`, `table.col`, `param.id`, `init.id`, `data.name`, `ddt.var`; element-wise `log10 log2 ln exp sqrt abs sin`; aggregates `mean sum min max first last std` (ddof 1); `at(col, t, times)`, `nth(col, i)`, `slice(col, from, to)`, `ifgt(a, b, x, y)`.
+
 ## Installation & usage
 
 ### npm (schema package)
