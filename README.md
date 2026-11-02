@@ -208,6 +208,10 @@ Breaking changes to a schema increment `spec_version` inside the schema and are 
 
 The `$id` of each schema is its canonical URL in this repository. Tools should reference schemas by their `$id` rather than by file path.
 
+## Design decisions
+
+Why the formats are shaped the way they are is recorded as ADRs, starting at [`docs/adrs/CONTEXT.md`](./docs/adrs/CONTEXT.md). [`docs/related-formats.md`](./docs/related-formats.md) compares them with SBML, CellML, SED-ML, COMBINE/OMEX, PEtab, BNGL and ONNX/safetensors.
+
 ## Contributing
 
 Schema changes that affect mxlpy or mxlweb must be coordinated with both consumers. Update the bundled copy in `mxlpy/src/mxlpy/schemas/` and the TypeScript node types in mxlweb alongside any change here. The analysis schema is vendored in GreenSloth (`src/lib/validation/analysis.schema.json`), whose tests fail when it drifts from this copy.
