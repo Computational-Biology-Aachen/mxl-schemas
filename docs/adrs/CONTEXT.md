@@ -16,6 +16,7 @@ A model file stores the mathematical model, not the biology. Everything else fol
 → [ADR 0005 — Derived quantities and readouts are separate](0005-derived-vs-readouts.md)
 → [ADR 0008 — Neural-network blocks: architecture inline, weights external](0008-nn-blocks-architecture-inline-weights-external.md)
 → [ADR 0009 — Scope: what the model format leaves out](0009-scope-what-is-left-out.md)
+→ [ADR 0014 — Array nodes and model data](0014-array-nodes-and-model-data.md)
 
 ## What Never Changes a Result
 
@@ -32,7 +33,7 @@ Optional, descriptive, ignorable without changing any number.
 ## Analyses (experimental)
 
 → [ADR 0012 — Analysis files](0012-analysis-files.md)
-→ [ADR 0013 — Analysis expressions are strings](0013-analysis-expression-strings.md)
+→ [ADR 0013 — Analysis expressions are strings](0013-analysis-expression-strings.md) (superseded by ADR 0014)
 
 ## Related Formats
 

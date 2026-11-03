@@ -205,7 +205,7 @@ All expressions (rates, derived, readouts, initial values, stoichiometry, deriva
 
 ## Analyses (`kind: "analysis"`, `analysis.schema.json`)
 
-What is done with one model, as plain data: `{spec_version: "1.0", kind: "analysis", model: {model_id, kind}, analyses: [...]}`. Each analysis has an `id` and optionally:
+What is done with one model, as plain data: `{spec_version: "1.1", kind: "analysis", model: {model_id, kind}, analyses: [...]}`. Each analysis has an `id` and optionally:
 
 - `scenarios`: named runs of modified model copies (`parameters`, `initial`, `edits`, `simulate`, `pre`, `stages`, `allowFailure`); columns `<scenario>.<col>`
 - `simulate`: default run, `timeCourse` (`tEval`), `protocol` (`steps` of `{duration, set}`, `pointsPerStep` or `tEval`) or `steadyState`
@@ -217,7 +217,11 @@ What is done with one model, as plain data: `{spec_version: "1.0", kind: "analys
 
 Model kinds: a steady-state model has no time, variables or reactions (only `steadyState` evaluation, steady-state scans, response coefficients, parameter edits, expressions). An ODE model has no reactions (no `removeReaction`, no elasticities). The schema enforces both from `model.kind`.
 
-Expressions are strings: numbers, `+ - * / ^`, unary minus, parentheses; references `col`, `scenario.col`, `table.col`, `param.id`, `init.id`, `data.name`, `ddt.var`; element-wise `log10 log2 ln exp sqrt abs sin`; aggregates `mean sum min max first last std` (ddof 1); `at(col, t, times)`, `nth(col, i)`, `slice(col, from, to)`, `ifgt(a, b, x, y)`.
+Expressions are node trees (ADR 0014): the model node set, with references as dotted `Name`s (`col`, `scenario.col`, `table.col`, `param.id`, `init.id`, `data.name`, `ddt.var`). Element-wise nodes broadcast over 1-D arrays; array nodes reduce or select: `Sum Mean Std(ddof 1) MaxOf MinOf` `[a]`, `Index [a, i]`, `Slice [a, start, stop]`, `At [a, t, times]`, `Simpson [y, x]`. They are authored as strings (numbers, `+ - * / ^`, unary minus, parentheses, references, `log10 log2 ln exp sqrt abs sin`, `mean sum min max first last std`, `at nth slice simpson ifgt`), compiled by mxlweb-core's `parseExpression`.
+
+## Model data
+
+`data_ref` (spec_version 1.2) names a sidecar (`model-data.schema.json`): `{"<id>": {"values": [...], "unit"?, "description"?}}`, 1-D arrays. Array subtrees in a model reference only data and numbers and reduce to a number, so they are constants.
 
 ## Installation & usage
 

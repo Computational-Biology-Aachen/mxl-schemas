@@ -5,7 +5,7 @@
    "name": "kinetic, every section",
    "valid": true,
    "document": {
-    "spec_version": "1.0",
+    "spec_version": "1.1",
     "kind": "analysis",
     "model": {
      "model_id": "m",
@@ -32,12 +32,36 @@
          }
         ],
         "parameters": {
-         "k": "param.k * 2"
+         "k": {
+          "type": "Mul",
+          "children": [
+           {
+            "type": "Name",
+            "value": "param.k"
+           },
+           {
+            "type": "Num",
+            "value": 2
+           }
+          ]
+         }
         }
        }
       },
       "deriveEach": {
-       "ratio": "x / y"
+       "ratio": {
+        "type": "Divide",
+        "children": [
+         {
+          "type": "Name",
+          "value": "x"
+         },
+         {
+          "type": "Name",
+          "value": "y"
+         }
+        ]
+       }
       },
       "ops": [
        {
@@ -48,20 +72,50 @@
        {
         "op": "column",
         "as": "dx",
-        "expr": "x - first(x)"
+        "expr": {
+         "type": "Minus",
+         "children": [
+          {
+           "type": "Name",
+           "value": "x"
+          },
+          {
+           "type": "Index",
+           "children": [
+            {
+             "type": "Name",
+             "value": "x"
+            },
+            {
+             "type": "Num",
+             "value": 0
+            }
+           ]
+          }
+         ]
+        }
        }
       ],
       "plots": [
        {
         "type": "line",
-        "x": "wt.time",
+        "x": {
+         "type": "Name",
+         "value": "wt.time"
+        },
         "y": [
          {
-          "of": "wt.x",
+          "of": {
+           "type": "Name",
+           "value": "wt.x"
+          },
           "label": "x"
          },
          {
-          "of": "ko.x",
+          "of": {
+           "type": "Name",
+           "value": "ko.x"
+          },
           "axis": "right"
          }
         ]
@@ -69,8 +123,14 @@
       ],
       "golden": {
        "x_wt": {
-        "x": "wt.time",
-        "y": "wt.x"
+        "x": {
+         "type": "Name",
+         "value": "wt.time"
+        },
+        "y": {
+         "type": "Name",
+         "value": "wt.x"
+        }
        }
       }
      },
@@ -191,7 +251,19 @@
          },
          {
           "setAssignment": "d",
-          "to": "a * b"
+          "to": {
+           "type": "Mul",
+           "children": [
+            {
+             "type": "Name",
+             "value": "a"
+            },
+            {
+             "type": "Name",
+             "value": "b"
+            }
+           ]
+          }
          }
         ],
         "simulate": {
@@ -213,7 +285,19 @@
         ],
         "z": [
          [
-          "nth(g.x, 0)"
+          {
+           "type": "Index",
+           "children": [
+            {
+             "type": "Name",
+             "value": "g.x"
+            },
+            {
+             "type": "Num",
+             "value": 0
+            }
+           ]
+          }
          ]
         ]
        }
@@ -265,15 +349,51 @@
        }
       },
       "derive": {
-       "stable": "ifgt(max(ss.real), 0, 0, 1)"
+       "stable": {
+        "type": "Piecewise",
+        "children": [
+         {
+          "type": "Num",
+          "value": 0
+         },
+         {
+          "type": "GreaterThan",
+          "children": [
+           {
+            "type": "MaxOf",
+            "children": [
+             {
+              "type": "Name",
+              "value": "ss.real"
+             }
+            ]
+           },
+           {
+            "type": "Num",
+            "value": 0
+           }
+          ]
+         },
+         {
+          "type": "Num",
+          "value": 1
+         }
+        ]
+       }
       },
       "plots": [
        {
         "type": "scatter",
         "series": [
          {
-          "x": "ss.real",
-          "y": "ss.imag"
+          "x": {
+           "type": "Name",
+           "value": "ss.real"
+          },
+          "y": {
+           "type": "Name",
+           "value": "ss.imag"
+          }
          }
         ]
        },
@@ -286,7 +406,19 @@
          {
           "label": "x",
           "of": [
-           "nth(rc.x, 0)"
+           {
+            "type": "Index",
+            "children": [
+             {
+              "type": "Name",
+              "value": "rc.x"
+             },
+             {
+              "type": "Num",
+              "value": 0
+             }
+            ]
+           }
           ]
          }
         ]
@@ -300,7 +432,7 @@
    "name": "ode: time course, initial values, response coefficients, stability",
    "valid": true,
    "document": {
-    "spec_version": "1.0",
+    "spec_version": "1.1",
     "kind": "analysis",
     "model": {
      "model_id": "m",
@@ -345,7 +477,7 @@
    "name": "steady-state: evaluation, scan, response coefficients, column op",
    "valid": true,
    "document": {
-    "spec_version": "1.0",
+    "spec_version": "1.1",
     "kind": "analysis",
     "model": {
      "model_id": "m",
@@ -365,7 +497,19 @@
         "edits": [
          {
           "setAssignment": "y",
-          "to": "k * 2"
+          "to": {
+           "type": "Mul",
+           "children": [
+            {
+             "type": "Name",
+             "value": "k"
+            },
+            {
+             "type": "Num",
+             "value": 2
+            }
+           ]
+          }
          }
         ]
        }
@@ -399,7 +543,19 @@
        {
         "op": "column",
         "as": "z",
-        "expr": "y * 2"
+        "expr": {
+         "type": "Mul",
+         "children": [
+          {
+           "type": "Name",
+           "value": "y"
+          },
+          {
+           "type": "Num",
+           "value": 2
+          }
+         ]
+        }
        }
       ]
      }
@@ -410,7 +566,7 @@
    "name": "steady-state: no time course",
    "valid": false,
    "document": {
-    "spec_version": "1.0",
+    "spec_version": "1.1",
     "kind": "analysis",
     "model": {
      "model_id": "m",
@@ -433,7 +589,7 @@
    "name": "steady-state: no time course in a scenario",
    "valid": false,
    "document": {
-    "spec_version": "1.0",
+    "spec_version": "1.1",
     "kind": "analysis",
     "model": {
      "model_id": "m",
@@ -463,7 +619,7 @@
    "name": "steady-state: no initial values",
    "valid": false,
    "document": {
-    "spec_version": "1.0",
+    "spec_version": "1.1",
     "kind": "analysis",
     "model": {
      "model_id": "m",
@@ -487,7 +643,7 @@
    "name": "steady-state: no stability",
    "valid": false,
    "document": {
-    "spec_version": "1.0",
+    "spec_version": "1.1",
     "kind": "analysis",
     "model": {
      "model_id": "m",
@@ -507,7 +663,7 @@
    "name": "steady-state: no elasticities",
    "valid": false,
    "document": {
-    "spec_version": "1.0",
+    "spec_version": "1.1",
     "kind": "analysis",
     "model": {
      "model_id": "m",
@@ -535,7 +691,7 @@
    "name": "steady-state: no time-series ops",
    "valid": false,
    "document": {
-    "spec_version": "1.0",
+    "spec_version": "1.1",
     "kind": "analysis",
     "model": {
      "model_id": "m",
@@ -559,7 +715,7 @@
    "name": "ode: no removeReaction",
    "valid": false,
    "document": {
-    "spec_version": "1.0",
+    "spec_version": "1.1",
     "kind": "analysis",
     "model": {
      "model_id": "m",
@@ -585,7 +741,7 @@
    "name": "ode: no elasticities",
    "valid": false,
    "document": {
-    "spec_version": "1.0",
+    "spec_version": "1.1",
     "kind": "analysis",
     "model": {
      "model_id": "m",
@@ -613,7 +769,7 @@
    "name": "unknown field",
    "valid": false,
    "document": {
-    "spec_version": "1.0",
+    "spec_version": "1.1",
     "kind": "analysis",
     "model": {
      "model_id": "m",
@@ -631,7 +787,7 @@
    "name": "column op needs expr",
    "valid": false,
    "document": {
-    "spec_version": "1.0",
+    "spec_version": "1.1",
     "kind": "analysis",
     "model": {
      "model_id": "m",
@@ -654,7 +810,7 @@
    "name": "scan needs columns",
    "valid": false,
    "document": {
-    "spec_version": "1.0",
+    "spec_version": "1.1",
     "kind": "analysis",
     "model": {
      "model_id": "m",
@@ -680,7 +836,7 @@
    "name": "scan can't run a protocol",
    "valid": false,
    "document": {
-    "spec_version": "1.0",
+    "spec_version": "1.1",
     "kind": "analysis",
     "model": {
      "model_id": "m",

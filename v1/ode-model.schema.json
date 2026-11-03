@@ -17,10 +17,11 @@
     },
     "spec_version": {
       "type": "string",
-      "description": "Version of the .mxl.json format. 1.1 adds units; 1.0 files remain valid.",
+      "description": "Version of the .mxl.json format. 1.1 adds units, 1.2 adds data (`data_ref`); earlier files remain valid.",
       "enum": [
         "1.0",
-        "1.1"
+        "1.1",
+        "1.2"
       ]
     },
     "kind": {
@@ -35,6 +36,11 @@
     "description": {
       "type": "string",
       "description": "Human-readable description of the model."
+    },
+    "data_ref": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Path, relative to this file, of the model's data sidecar (model-data.schema.json): named 1-D arrays such as spectra (ADR 0014). Math reaches data only through array nodes (`Simpson`, `Sum`, `Index`, ...) whose subtrees reference nothing but data and numbers, so every such subtree is a constant. Present iff the model has data."
     },
     "model": {
       "type": "object",
@@ -384,7 +390,7 @@
     },
     "node": {
       "type": "object",
-      "description": "A math expression node. The 'type' discriminator selects the operand fields.",
+      "description": "A math expression node. The 'type' discriminator selects the operand fields. Besides the Content MathML operators, the array nodes of ADR 0014 (Sum, Mean, Std, MaxOf, MinOf, Index, Slice, At, Simpson; operands in `children`) reduce or select from 1-D data.",
       "required": [
         "type"
       ],

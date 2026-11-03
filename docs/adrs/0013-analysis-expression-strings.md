@@ -1,6 +1,6 @@
 # ADR 0013: Analysis Expressions Are Strings
 
-**Status:** Experimental
+**Status:** Superseded by [ADR 0014](0014-array-nodes-and-model-data.md)
 **Scope:** `$defs/expression` in `v1/analysis.schema.json`; `tests/expressions.fixtures.json`
 
 ---

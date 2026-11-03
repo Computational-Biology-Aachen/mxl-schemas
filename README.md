@@ -14,7 +14,7 @@ The `.mxl.json` format comes in three formulations, one schema each, all under `
 | [`v1/ode-model.schema.json`](./v1/ode-model.schema.json)             | `ode`          | Direct per-variable derivative       | encoded as `fn` on each `variable` |
 | [`v1/steady-state-model.schema.json`](./v1/steady-state-model.schema.json) | `steady-state` | Algebraic outputs of the parameters  | none (no time integration)     |
 
-A fourth schema, [`v1/nn-weights.schema.json`](./v1/nn-weights.schema.json), describes the external weight/bias sidecar file that an `nn_block`'s `weights_ref` points to — not a `.mxl.json` document itself, no envelope/`kind` discriminator.
+A fourth schema, [`v1/nn-weights.schema.json`](./v1/nn-weights.schema.json), describes the external weight/bias sidecar file that an `nn_block`'s `weights_ref` points to — not a `.mxl.json` document itself, no envelope/`kind` discriminator. A fifth, [`v1/model-data.schema.json`](./v1/model-data.schema.json), likewise describes the data sidecar a model's `data_ref` points to (see [Model data](#model-data)).
 
 ### Envelope
 
@@ -27,6 +27,7 @@ Every model file shares the same outer shape:
   "kind": "kinetic | ode | steady-state",
   "model_id": "my_model",
   "description": "optional human-readable description",
+  "data_ref": "optional: model.data.json (spec_version 1.2)",
   "model": { ... }
 }
 ```
@@ -107,15 +108,22 @@ All expressions (rates, derived, readouts, initial values, stoichiometry, deriva
 | `Pow`, `Implies`  | `left`, `right`  | Two operands                      |
 | `Log`, `Sqrt`     | `child`, `base`  | Operand plus base/degree          |
 | n-ary (`Add`, …)  | `children`       | Variadic operands                 |
+| array (`Simpson`, …) | `children`    | Reduce or select from a 1-D array |
+
+Every node broadcasts element-wise over 1-D arrays (a number combines with every element, two arrays element by element and must have equal lengths). Nine array nodes reduce or select ([ADR 0014](docs/adrs/0014-array-nodes-and-model-data.md)): `Sum`, `Mean`, `Std` (ddof = 1), `MaxOf`, `MinOf` (`[a]`), `Index` (`[a, i]`, 0-based, negative from the end), `Slice` (`[a, start, stop]`, end exclusive), `At` (`[a, t, times]`, the element at the sample of `times` nearest `t`) and `Simpson` (`[y, x]`, `scipy.integrate.simpson(y, x=x)`). `Max`/`Min` stay n-ary and element-wise.
+
+### Model data
+
+Named 1-D arrays, such as spectra, live in a sidecar file that the model's `data_ref` names (relative to the model file; [`v1/model-data.schema.json`](./v1/model-data.schema.json)): `{"<id>": {"values": [...], "unit"?, "description"?}}`. A table is one array per column; a shared axis (e.g. wavelength) is an array of its own. Math reaches data only through array subtrees that reference nothing but data and numbers and reduce to a number, so each is a constant a consumer evaluates once per data set, e.g. `Mul(chla_content, Simpson(Mul(abs_coef_chla, light), wavelength))`. Data are not parameters: scans, sliders and fits never see them.
 
 ## Analyses
 
-[`v1/analysis.schema.json`](./v1/analysis.schema.json) (`kind: "analysis"`, `spec_version: "1.0"`) describes what is done *with* a model: simulations, data handling, plots and checks, as plain data any backend can run. GreenSloth runs them in the browser and exports them as MxlPy notebooks; the two are held to the same reference values. It is deliberately much smaller than SED-ML: no fitting, sampling or sensitivity analysis yet.
+[`v1/analysis.schema.json`](./v1/analysis.schema.json) (`kind: "analysis"`, `spec_version: "1.1"`) describes what is done *with* a model: simulations, data handling, plots and checks, as plain data any backend can run. GreenSloth runs them in the browser and exports them as MxlPy notebooks; the two are held to the same reference values. It is deliberately much smaller than SED-ML: no fitting, sampling or sensitivity analysis yet.
 
 ```json
 {
   "$schema": "https://raw.githubusercontent.com/Computational-Biology-Aachen/mxl-schemas/main/v1/analysis.schema.json",
-  "spec_version": "1.0",
+  "spec_version": "1.1",
   "kind": "analysis",
   "model": { "model_id": "poolman2000", "kind": "kinetic" },
   "analyses": [
@@ -124,7 +132,13 @@ All expressions (rates, derived, readouts, initial values, stoichiometry, deriva
       "title": "Effect of cytosolic phosphate",
       "simulate": { "kind": "steadyState" },
       "scans": { "scan": { "over": { "Orthophosphate_external": [0.05, 0.1, 0.2] }, "columns": ["ex_g1p"] } },
-      "plots": [{ "type": "line", "x": "scan.x", "y": [{ "of": "scan.ex_g1p", "label": "Starch flux" }] }]
+      "plots": [
+        {
+          "type": "line",
+          "x": { "type": "Name", "value": "scan.x" },
+          "y": [{ "of": { "type": "Name", "value": "scan.ex_g1p" }, "label": "Starch flux" }]
+        }
+      ]
     }
   ]
 }
@@ -155,15 +169,23 @@ An analysis file is bound to one model. Each entry in `analyses` is one figure o
 
 ### Expressions
 
-Analyses use short expression strings rather than math node trees, since they refer to result columns, not model entities:
+Analysis expressions are node trees ([ADR 0014](docs/adrs/0014-array-nodes-and-model-data.md)): the model formats' nodes, with references as `Name`s the consumer resolves, so a consumer only evaluates trees. They are written as short strings, compiled by one reference parser (mxlweb-core's `parseExpression`) to the stored tree:
 
 - numbers (`1`, `2.5e-3`), `+ - * / ^` (`^` is right-associative and binds tighter than unary minus: `-k ^ 2` is `-(k^2)`), parentheses
 - references: `col` (inside a scenario), `scenario.col`, `table.col`, `param.<id>` and `init.<id>` (the model's defaults), `data.<name>`, `ddt.<variable>`
 - element-wise: `log10 log2 ln exp sqrt abs sin`
 - aggregates, reducing an array to a number: `mean sum min max first last std` (`std` uses ddof = 1)
-- `at(col, t, times)` (the value of `col` at the sample of `times` nearest `t`), `nth(col, i)` (0-based), `slice(col, from, to)` (end exclusive), `ifgt(a, b, x, y)` (`x` if `a > b`, else `y`)
+- `at(col, t, times)` (the value of `col` at the sample of `times` nearest `t`), `nth(col, i)` (0-based), `slice(col, from, to)` (end exclusive), `simpson(y, x)`, `ifgt(a, b, x, y)` (`x` if `a > b`, else `y`)
 
-Arrays combine element-wise and must have equal lengths; a number broadcasts. [`tests/expressions.fixtures.json`](./tests/expressions.fixtures.json) holds cross-language cases.
+| String | Tree |
+| --- | --- |
+| `wt.x - first(wt.x)` | `Minus(Name("wt.x"), Index(Name("wt.x"), Num(0)))` |
+| `-log10(H * 1e-6)` | `Minus(Log(Mul(Name("H"), Num(1e-6)), Num(10)))` |
+| `mean`/`sum`/`min`/`max`/`std` | `Mean`/`Sum`/`MinOf`/`MaxOf`/`Std` |
+| `last(a)`, `nth(a, i)`, `slice`, `at`, `simpson` | `Index(a, -1)`, `Index(a, i)`, `Slice`, `At`, `Simpson` |
+| `ifgt(a, b, x, y)` | `Piecewise(x, GreaterThan(a, b), y)` |
+
+Arrays combine element-wise and must have equal lengths; a number broadcasts. [`tests/expressions.fixtures.json`](./tests/expressions.fixtures.json) holds cross-language cases: each string, its tree and the tree's value.
 
 ### Named ops
 

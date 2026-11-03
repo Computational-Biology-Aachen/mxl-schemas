@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Computational-Biology-Aachen/mxl-schemas/main/v1/model-data.schema.json",
+  "title": "Mxl model data sidecar",
+  "description": "The data of one model, referenced by its `data_ref` (kinetic-model.schema.json / ode-model.schema.json / steady-state-model.schema.json): named 1-D arrays such as spectra (ADR 0014). Kept out of the model file so that file stays small and diffable, as nn weights are (ADR 0008). A table is stored as one array per column; arrays sampled on a shared axis (e.g. wavelength) list that axis as an array of its own.",
+  "type": "object",
+  "propertyNames": {
+    "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+  },
+  "additionalProperties": {
+    "type": "object",
+    "required": [
+      "values"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "values": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        },
+        "minItems": 1,
+        "description": "The array's values."
+      },
+      "unit": {
+        "description": "Unit of every value, in the representation of the model formats' `$defs/unit` (units.json)."
+      },
+      "description": {
+        "type": "string",
+        "description": "What the array holds."
+      }
+    }
+  }
+}
