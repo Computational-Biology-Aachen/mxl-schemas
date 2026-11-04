@@ -162,7 +162,7 @@ An analysis file is bound to one model. Each entry in `analyses` is one figure o
 
 | Needs | kinetic | ode | steady-state | Analyses |
 | --- | :-: | :-: | :-: | --- |
-| — | ✓ | ✓ | ✓ | `steadyState` (a steady-state model is evaluated), steady-state scans, response coefficients, parameter changes, `setAssignment`, `addParameter`, `parameterToAssignment`, expressions, tables, plots |
+| — | ✓ | ✓ | ✓ | `steadyState` (a steady-state model is evaluated), steady-state scans, response coefficients, parameter changes, `setAssignment`, `addParameter`, `parameterToAssignment`, `setData` (replace a model data array), expressions, tables, plots |
 | time | ✓ | ✓ | — | `timeCourse`, `protocol`, `pre`, `stages`, time-course scans, named ops, `returnRhs` |
 | variables | ✓ | ✓ | — | `initial`, `clampVariable`, `stability`, elasticities at a variable state |
 | reactions | ✓ | — | — | `removeReaction`, parameter and variable elasticities |
