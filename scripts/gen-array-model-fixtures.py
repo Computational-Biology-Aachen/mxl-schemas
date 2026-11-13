@@ -44,7 +44,9 @@ DATA = {
     "I0": [50.0, 80.0, 120.0, 150.0, 140.0, 110.0, 60.0],
 }
 PARAMETERS = {"chl": 0.8, "z": 0.5, "kp": 0.3, "kd": 0.1, "ks": 0.05}
-VARIABLES = {"c1": 0.6, "c2": 0.4, "S": 2.0}
+# No ties between the extreme elements of k_att / I_loc at any point: MaxOf and
+# MinOf have no derivative there (checked in point()).
+VARIABLES = {"c1": 0.63, "c2": 0.41, "S": 2.0}
 
 DERIVED = {
     # arrays: state-dependent attenuation and local light per wavelength
@@ -132,8 +134,16 @@ def value(expr: sp.Expr, subs: dict) -> float:
     return float(sp.N(expr.subs(subs), 30))
 
 
+def _gap(values: list[sp.Expr], subs: dict, *, largest: bool) -> float:
+    xs = sorted(float(sp.N(v.subs(subs), 30)) for v in values)
+    return xs[-1] - xs[-2] if largest else xs[1] - xs[0]
+
+
 def point(variables: dict) -> dict:
     subs = {ys[k]: v for k, v in variables.items()} | {ps[k]: v for k, v in PARAMETERS.items()}
+    if min(_gap(I_loc, subs, largest=True), _gap(k_att, subs, largest=False)) < 1e-3:
+        msg = f"MaxOf/MinOf operands nearly tie at {variables}"
+        raise ValueError(msg)
     return {
         "variables": variables,
         "derived": {k: value(e, subs) for k, e in scalars.items()},
