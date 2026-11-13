@@ -27,7 +27,7 @@ Every model file shares the same outer shape:
   "kind": "kinetic | ode | steady-state",
   "model_id": "my_model",
   "description": "optional human-readable description",
-  "data_ref": "optional: model.data.json (spec_version 1.2)",
+  "data_ref": "optional: model.data.json (spec_version 1.2; 1.3 with state-dependent arrays)",
   "model": { ... }
 }
 ```
@@ -114,7 +114,18 @@ Every node broadcasts element-wise over 1-D arrays (a number combines with every
 
 ### Model data
 
-Named 1-D arrays, such as spectra, live in a sidecar file that the model's `data_ref` names (relative to the model file; [`v1/model-data.schema.json`](./v1/model-data.schema.json)): `{"<id>": {"values": [...], "unit"?, "description"?}}`. A table is one array per column; a shared axis (e.g. wavelength) is an array of its own. Math reaches data only through array subtrees that reference nothing but data and numbers and reduce to a number, so each is a constant a consumer evaluates once per data set, e.g. `Mul(chla_content, Simpson(Mul(abs_coef_chla, light), wavelength))`. Data are not parameters: scans, sliders and fits never see them.
+Named 1-D arrays, such as spectra, live in a sidecar file that the model's `data_ref` names (relative to the model file; [`v1/model-data.schema.json`](./v1/model-data.schema.json)): `{"<id>": {"values": [...], "unit"?, "description"?}}`. A table is one array per column; a shared axis (e.g. wavelength) is an array of its own. Math reaches data through array subtrees, e.g. `Mul(chla_content, Simpson(Mul(abs_coef_chla, light), wavelength))`. Data are not parameters: scans, sliders and fits never see them.
+
+### Array-valued derived quantities
+
+A derived quantity may be a 1-D array ([ADR 0015](docs/adrs/0015-array-valued-intermediates.md)), and its subtree may reference variables, parameters and time as well as data, e.g. the light per wavelength at depth `z`, `Mul(light, Exp(Minus(Mul(chl, abs_coef_chla, z))))`. The right-hand side stays scalar:
+
+- variables, parameters, initial values, reaction rates, stoichiometries, derivatives and readouts are numbers; an array reaching one is an error.
+- every length comes from data; shapes are inferred, and arrays that combine must have equal lengths.
+- `Simpson`'s `x`, `Index`'s `i`, `Slice`'s `start`/`stop` and `At`'s `t`/`times` reference only data and numbers.
+- array-valued derived quantities are internal: they are not result columns.
+
+A model with an array subtree that references a variable, parameter, time or derived quantity is `spec_version` 1.3; one that uses data only through constants (folded once per data set) stays 1.2. [`tests/array-models.fixtures.json`](./tests/array-models.fixtures.json) holds a cross-language array model with reference right-hand sides and exact Jacobians, plus models every consumer must reject (regenerate with `uv run scripts/gen-array-model-fixtures.py`).
 
 ## Analyses
 
