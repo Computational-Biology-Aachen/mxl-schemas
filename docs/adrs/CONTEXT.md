@@ -16,7 +16,8 @@ A model file stores the mathematical model, not the biology. Everything else fol
 → [ADR 0005 — Derived quantities and readouts are separate](0005-derived-vs-readouts.md)
 → [ADR 0008 — Neural-network blocks: architecture inline, weights external](0008-nn-blocks-architecture-inline-weights-external.md)
 → [ADR 0009 — Scope: what the model format leaves out](0009-scope-what-is-left-out.md)
-→ [ADR 0014 — Array nodes and model data](0014-array-nodes-and-model-data.md)
+→ [ADR 0014 — Array nodes and model data](0014-array-nodes-and-model-data.md) (model restriction amended by ADR 0015)
+→ [ADR 0015 — Array-valued intermediates](0015-array-valued-intermediates.md)
 
 ## What Never Changes a Result
 

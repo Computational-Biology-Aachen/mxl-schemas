@@ -1,6 +1,6 @@
 # ADR 0014: Array Nodes and Model Data
 
-**Status:** Implemented
+**Status:** Implemented; the model restriction of §2 is amended by [ADR 0015](0015-array-valued-intermediates.md)
 **Scope:** `$defs/node` in every schema; `data_ref` in the model schemas; `v1/model-data.schema.json`; `$defs/expression` in `v1/analysis.schema.json`; `tests/expressions.fixtures.json`
 **Supersedes:** [ADR 0013](0013-analysis-expression-strings.md)
 
