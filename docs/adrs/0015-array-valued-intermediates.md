@@ -1,7 +1,7 @@
 # ADR 0015: Array-Valued Intermediates
 
 **Status:** Implemented (MxlPy, mxlweb-core)
-**Scope:** derived quantities in the model schemas; `spec_version` 1.3; consumer-side validation and codegen
+**Scope:** derived quantities in the model schemas; `spec_version` 0.4; consumer-side validation and codegen
 **Amends:** [ADR 0014](0014-array-nodes-and-model-data.md) §2 (an array subtree in a model may reference only data and numbers)
 
 ---
@@ -59,8 +59,8 @@ The array operands (`y`, `a`) may depend on state. Analyses are evaluated, not c
 
 **Version.**
 
-- A model whose array subtree references a parameter, a variable, time or a derived quantity has `spec_version` 1.3.
-- A model that uses data only through constants stays valid 1.2.
+- A model whose array subtree references a parameter, a variable, time or a derived quantity has `spec_version` 0.4.
+- A model that uses data only through constants stays valid 0.3.
 - The schema adds no nodes and no shape fields. The rules above are consumer-side validation, as the type rules for nn blocks are.
 
 ## 3. Rationale
@@ -90,7 +90,7 @@ The array operands (`y`, `a`) may depend on state. Analyses are evaluated, not c
 - **Derivative code changes.** Symbolic differentiation (MxlPy's sympy `Array*` functions) and reverse mode (mxlweb-core's gradients) learn array-valued adjoints. A reduction spreads its scalar adjoint back over the array, and element-wise nodes multiply element-wise. A number used element-wise in an array gets the sum of its per-element adjoints.
 - **mxlweb-core's reverse mode only differentiates `Slice` directly inside `Sum`.** It handles `Index` and `Sum(Slice(…))` as sums over a constant mask. Any other use of `Slice` in a gradient-based fit is an error. MxlPy's symbolic derivatives have no such limit.
 - **Exports get bigger.** SBML exports of such models are large, as the hand-unrolled models already are.
-- **Old consumers reject new files.** Consumers that only know 1.2 reject 1.3 files (ADR 0011) instead of misreading them.
+- **Old consumers reject new files.** Consumers that only know 0.3 reject 0.4 files (ADR 0011) instead of misreading them.
 - **Tests are needed at three levels:**
   - cross-language fixtures for a small array model (states and parameters → right-hand side and Jacobian), at points where no `MaxOf`/`MinOf` operands tie;
   - each backend against numpy;

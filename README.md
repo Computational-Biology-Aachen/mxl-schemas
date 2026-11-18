@@ -6,15 +6,15 @@ All schemas target [JSON Schema Draft 2020-12](https://json-schema.org/draft/202
 
 ## Schemas
 
-The `.mxl.json` format comes in three formulations, one schema each, all under `v1/`. Every file carries a required top-level `kind` discriminator so a consumer can pick the right schema without inspecting the model structure.
+The `.mxl.json` format comes in three formulations, one schema each, all under `v0/`. Every file carries a required top-level `kind` discriminator so a consumer can pick the right schema without inspecting the model structure.
 
 | File                                                                 | `kind`         | Formulation                          | dx/dt                          |
 | -------------------------------------------------------------------- | -------------- | ------------------------------------ | ------------------------------ |
-| [`v1/kinetic-model.schema.json`](./v1/kinetic-model.schema.json)     | `kinetic`      | Reactions × stoichiometry            | computed as `N·v`              |
-| [`v1/ode-model.schema.json`](./v1/ode-model.schema.json)             | `ode`          | Direct per-variable derivative       | encoded as `fn` on each `variable` |
-| [`v1/steady-state-model.schema.json`](./v1/steady-state-model.schema.json) | `steady-state` | Algebraic outputs of the parameters  | none (no time integration)     |
+| [`v0/kinetic-model.schema.json`](./v0/kinetic-model.schema.json)     | `kinetic`      | Reactions × stoichiometry            | computed as `N·v`              |
+| [`v0/ode-model.schema.json`](./v0/ode-model.schema.json)             | `ode`          | Direct per-variable derivative       | encoded as `fn` on each `variable` |
+| [`v0/steady-state-model.schema.json`](./v0/steady-state-model.schema.json) | `steady-state` | Algebraic outputs of the parameters  | none (no time integration)     |
 
-A fourth schema, [`v1/nn-weights.schema.json`](./v1/nn-weights.schema.json), describes the external weight/bias sidecar file that an `nn_block`'s `weights_ref` points to — not a `.mxl.json` document itself, no envelope/`kind` discriminator. A fifth, [`v1/model-data.schema.json`](./v1/model-data.schema.json), likewise describes the data sidecar a model's `data_ref` points to (see [Model data](#model-data)).
+A fourth schema, [`v0/nn-weights.schema.json`](./v0/nn-weights.schema.json), describes the external weight/bias sidecar file that an `nn_block`'s `weights_ref` points to — not a `.mxl.json` document itself, no envelope/`kind` discriminator. A fifth, [`v0/model-data.schema.json`](./v0/model-data.schema.json), likewise describes the data sidecar a model's `data_ref` points to (see [Model data](#model-data)).
 
 ### Envelope
 
@@ -22,12 +22,12 @@ Every model file shares the same outer shape:
 
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/Computational-Biology-Aachen/mxl-schemas/main/v1/<kind>-model.schema.json",
-  "spec_version": "1.1",
+  "$schema": "https://raw.githubusercontent.com/Computational-Biology-Aachen/mxl-schemas/main/v0/<kind>-model.schema.json",
+  "spec_version": "0.2",
   "kind": "kinetic | ode | steady-state",
   "model_id": "my_model",
   "description": "optional human-readable description",
-  "data_ref": "optional: model.data.json (spec_version 1.2; 1.3 with state-dependent arrays)",
+  "data_ref": "optional: model.data.json (spec_version 0.3; 0.4 with state-dependent arrays)",
   "model": { ... }
 }
 ```
@@ -52,7 +52,7 @@ Every model file shares the same outer shape:
 
   This section records the architecture needed to regenerate, re-edit, or evaluate a block: `inputs`, `layers` (a `{type, width, activation?}` stack — only `type: "dense"` exists today, but every layer is tagged so a future layer kind is a new variant rather than a restructure), `seed`, `targets`, `trained`, `scale` (the block's initial output-scaling factor), and `mechanism`. Each layer's optional `activation` is a `{name, expression}` pair — `expression` is a portable MathML definition over a single placeholder `x`, `name` lets a backend with its own native implementation, e.g. `"softplus"`, skip evaluating it node-by-node. A layer with no `activation` is a plain linear combination (can take any real value) — the common case for the final layer, but any layer, including the final one, may carry a non-identity activation; there is no separate block-level activation field.
 
-  Weight/bias values are **not** parameters and are **not** stored inline: they live in an external per-block JSON sidecar file (`v1/nn-weights.schema.json`), keyed `w1`/`b1`/`w2`/`b2`/… per layer (1-indexed, matching `layers`), each weight matrix shaped `[out_features, in_features]` (PyTorch/equinox-native — a Keras-backed consumer transposes on import/export). A trained block (`trained: true`) requires `weights_ref`, a path to that sidecar relative to the `.mxl.json` file itself; an untrained block (`trained: false`) forbids `weights_ref` and is initialized from `seed` instead. This split — architecture in the human-readable/diffable model file, weight values in a separate file — mirrors the common pattern across ONNX's `external_data`, HuggingFace's `config.json`/`*.safetensors` split, and glTF's external-buffer mode; unlike those, both files here stay plain JSON since nn_blocks are meant to be small correction nets, not large deep networks. Omitted from the steady-state format, which has no dynamics for a correction term to feed into.
+  Weight/bias values are **not** parameters and are **not** stored inline: they live in an external per-block JSON sidecar file (`v0/nn-weights.schema.json`), keyed `w1`/`b1`/`w2`/`b2`/… per layer (1-indexed, matching `layers`), each weight matrix shaped `[out_features, in_features]` (PyTorch/equinox-native — a Keras-backed consumer transposes on import/export). A trained block (`trained: true`) requires `weights_ref`, a path to that sidecar relative to the `.mxl.json` file itself; an untrained block (`trained: false`) forbids `weights_ref` and is initialized from `seed` instead. This split — architecture in the human-readable/diffable model file, weight values in a separate file — mirrors the common pattern across ONNX's `external_data`, HuggingFace's `config.json`/`*.safetensors` split, and glTF's external-buffer mode; unlike those, both files here stay plain JSON since nn_blocks are meant to be small correction nets, not large deep networks. Omitted from the steady-state format, which has no dynamics for a correction term to feed into.
 
 ### Presentation metadata
 
@@ -64,7 +64,7 @@ Every entity accepts optional presentation fields so a model round-trips lossles
 
 All three are optional: a bare math-only file still validates.
 
-### Units (spec 1.1)
+### Units (spec 0.2)
 
 `variable`, `parameter`, `derived`, `readout` and `reaction` entities accept an optional `unit`. A unit is a flat product of factors — the same model as an SBML `unitDefinition` — so every unit has one structure regardless of how it was written (`mol/l/s` and `mol/(l*s)` are the same thing):
 
@@ -81,7 +81,7 @@ All three are optional: a bare math-only file still validates.
 
 Value = `multiplier · ∏ (10^prefix · kind)^exponent`. `factors: []` is dimensionless. `multiplier` is optional (default 1) and only for scales no prefix can express.
 
-`kind` must be an id from the shared registry [`v1/units.json`](./v1/units.json) — SI/SBML base and derived units, `minute`/`hour`/`bar`, and domain units used across the tool family (`mol_chl`, `einstein` = mol photons, …) — or a **custom unit** declared in the model's own top-level `model.units` section:
+`kind` must be an id from the shared registry [`v0/units.json`](./v0/units.json) — SI/SBML base and derived units, `minute`/`hour`/`bar`, and domain units used across the tool family (`mol_chl`, `einstein` = mol photons, …) — or a **custom unit** declared in the model's own top-level `model.units` section:
 
 ```json
 "units": { "OD600": { "description": "optical density at 600 nm" } }
@@ -93,7 +93,7 @@ Custom kinds are opaque base dimensions: mxlpy turns them into `sympy.physics.un
 
 ### Identifiers
 
-Entity ids are free-form strings in mxlpy (`"CO2 (dissolved)"`), but every code exporter needs them as identifiers. [`v1/identifiers.json`](./v1/identifiers.json) defines the one canonical mapping both mxlpy and mxlweb-core use, so a model has the same ids in Python and JavaScript: ASCII `[A-Za-z_][A-Za-z0-9_]*` (WAT locals are ASCII-only), Greek and a few Latin letters transliterated (`Δψ` → `Deltapsi`), biochemical symbols spelled out (`P700+FA-` → `P700_plus_FA_minus`, `Fd*` → `Fd_star`, `ATP/tot` → `ATP_per_tot`; a `-` between letters is a hyphen: `Light-harvesting` → `Light_harvesting`), other invalid runs collapsed to `_`, and a `_` suffix for Python/JavaScript keywords and names the generated code uses itself (`time`, `m`, `pars`, `Math`, …). Two names of one model mapping to the same identifier is an error. The rules are idempotent: a canonical id maps to itself. [`tests/identifiers.fixtures.json`](./tests/identifiers.fixtures.json) holds the cross-language cases both consumers test against.
+Entity ids are free-form strings in mxlpy (`"CO2 (dissolved)"`), but every code exporter needs them as identifiers. [`v0/identifiers.json`](./v0/identifiers.json) defines the one canonical mapping both mxlpy and mxlweb-core use, so a model has the same ids in Python and JavaScript: ASCII `[A-Za-z_][A-Za-z0-9_]*` (WAT locals are ASCII-only), Greek and a few Latin letters transliterated (`Δψ` → `Deltapsi`), biochemical symbols spelled out (`P700+FA-` → `P700_plus_FA_minus`, `Fd*` → `Fd_star`, `ATP/tot` → `ATP_per_tot`; a `-` between letters is a hyphen: `Light-harvesting` → `Light_harvesting`), other invalid runs collapsed to `_`, and a `_` suffix for Python/JavaScript keywords and names the generated code uses itself (`time`, `m`, `pars`, `Math`, …). Two names of one model mapping to the same identifier is an error. The rules are idempotent: a canonical id maps to itself. [`tests/identifiers.fixtures.json`](./tests/identifiers.fixtures.json) holds the cross-language cases both consumers test against.
 
 ### Math node tree
 
@@ -114,7 +114,7 @@ Every node broadcasts element-wise over 1-D arrays (a number combines with every
 
 ### Model data
 
-Named 1-D arrays, such as spectra, live in a sidecar file that the model's `data_ref` names (relative to the model file; [`v1/model-data.schema.json`](./v1/model-data.schema.json)): `{"<id>": {"values": [...], "unit"?, "description"?}}`. A table is one array per column; a shared axis (e.g. wavelength) is an array of its own. Math reaches data through array subtrees, e.g. `Mul(chla_content, Simpson(Mul(abs_coef_chla, light), wavelength))`. Data are not parameters: scans, sliders and fits never see them.
+Named 1-D arrays, such as spectra, live in a sidecar file that the model's `data_ref` names (relative to the model file; [`v0/model-data.schema.json`](./v0/model-data.schema.json)): `{"<id>": {"values": [...], "unit"?, "description"?}}`. A table is one array per column; a shared axis (e.g. wavelength) is an array of its own. Math reaches data through array subtrees, e.g. `Mul(chla_content, Simpson(Mul(abs_coef_chla, light), wavelength))`. Data are not parameters: scans, sliders and fits never see them.
 
 ### Array-valued derived quantities
 
@@ -125,16 +125,16 @@ A derived quantity may be a 1-D array ([ADR 0015](docs/adrs/0015-array-valued-in
 - `Simpson`'s `x`, `Index`'s `i`, `Slice`'s `start`/`stop` and `At`'s `t`/`times` reference only data and numbers.
 - array-valued derived quantities are internal: they are not result columns.
 
-A model with an array subtree that references a variable, parameter, time or derived quantity is `spec_version` 1.3; one that uses data only through constants (folded once per data set) stays 1.2. [`tests/array-models.fixtures.json`](./tests/array-models.fixtures.json) holds a cross-language array model with reference right-hand sides and exact Jacobians, plus models every consumer must reject (regenerate with `uv run scripts/gen-array-model-fixtures.py`).
+A model with an array subtree that references a variable, parameter, time or derived quantity is `spec_version` 0.4; one that uses data only through constants (folded once per data set) stays 0.3. [`tests/array-models.fixtures.json`](./tests/array-models.fixtures.json) holds a cross-language array model with reference right-hand sides and exact Jacobians, plus models every consumer must reject (regenerate with `uv run scripts/gen-array-model-fixtures.py`).
 
 ## Analyses
 
-[`v1/analysis.schema.json`](./v1/analysis.schema.json) (`kind: "analysis"`, `spec_version: "1.1"`) describes what is done *with* a model: simulations, data handling, plots and checks, as plain data any backend can run. GreenSloth runs them in the browser and exports them as MxlPy notebooks; the two are held to the same reference values. It is deliberately much smaller than SED-ML: no fitting, sampling or sensitivity analysis yet.
+[`v0/analysis.schema.json`](./v0/analysis.schema.json) (`kind: "analysis"`, `spec_version: "0.1"`) describes what is done *with* a model: simulations, data handling, plots and checks, as plain data any backend can run. GreenSloth runs them in the browser and exports them as MxlPy notebooks; the two are held to the same reference values. It is deliberately much smaller than SED-ML: no fitting, sampling or sensitivity analysis yet.
 
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/Computational-Biology-Aachen/mxl-schemas/main/v1/analysis.schema.json",
-  "spec_version": "1.1",
+  "$schema": "https://raw.githubusercontent.com/Computational-Biology-Aachen/mxl-schemas/main/v0/analysis.schema.json",
+  "spec_version": "0.2",
   "kind": "analysis",
   "model": { "model_id": "poolman2000", "kind": "kinetic" },
   "analyses": [
@@ -215,9 +215,9 @@ npm install -g ajv-cli
 Validate a model file against the schema matching its `kind`:
 
 ```bash
-check-jsonschema --schemafile v1/kinetic-model.schema.json path/to/model.mxl.json
+check-jsonschema --schemafile v0/kinetic-model.schema.json path/to/model.mxl.json
 # or
-ajv validate -s v1/kinetic-model.schema.json -d path/to/model.mxl.json
+ajv validate -s v0/kinetic-model.schema.json -d path/to/model.mxl.json
 ```
 
 ## Editor integration
@@ -229,7 +229,7 @@ Add to `.vscode/settings.json` in your project to get IntelliSense on `.mxl.json
   "json.schemas": [
     {
       "fileMatch": ["*.mxl.json"],
-      "url": "https://raw.githubusercontent.com/Computational-Biology-Aachen/mxl-schemas/main/v1/kinetic-model.schema.json"
+      "url": "https://raw.githubusercontent.com/Computational-Biology-Aachen/mxl-schemas/main/v0/kinetic-model.schema.json"
     }
   ]
 }
@@ -237,7 +237,7 @@ Add to `.vscode/settings.json` in your project to get IntelliSense on `.mxl.json
 
 ## Versioning
 
-Breaking changes to a schema increment `spec_version` inside the schema and are released as a new major version of this repository. Backwards-compatible additions are released as minor versions.
+The format is pre-1.0 (`spec_version` 0.x, schemas under `v0/`): while it settles, a minor bump may change the format incompatibly, and consumers are updated in lockstep. `1.0` (under `v1/`) is reserved for the first stable release; from then on minor versions only add and a breaking change is a new major version in a new directory. See [ADR 0011](./docs/adrs/0011-versioning-and-vendoring.md).
 
 The `$id` of each schema is its canonical URL in this repository. Tools should reference schemas by their `$id` rather than by file path.
 

@@ -1,7 +1,7 @@
 # ADR 0010: Canonical Identifiers
 
 **Status:** Implemented (rules and fixtures); schema enforcement pending
-**Scope:** `v1/identifiers.json`, `tests/identifiers.fixtures.json`; entity ids in every model file
+**Scope:** `v0/identifiers.json`, `tests/identifiers.fixtures.json`; entity ids in every model file
 
 ---
 
@@ -11,7 +11,7 @@ Model authors use free-form names (`CO2 (dissolved)`, `Fd*`, `Δψ`), but every 
 
 ## 2. Decision
 
-- `v1/identifiers.json` defines one mapping from names to identifiers: ASCII `[A-Za-z_][A-Za-z0-9_]*`, Greek and some Latin letters transliterated, biochemical symbols spelled out (`Fd*` → `Fd_star`, `ATP/tot` → `ATP_per_tot`), other invalid runs collapsed to `_`, and a `_` suffix for keywords and names generated code reserves. The mapping is idempotent; two names of one model mapping to the same identifier is an error.
+- `v0/identifiers.json` defines one mapping from names to identifiers: ASCII `[A-Za-z_][A-Za-z0-9_]*`, Greek and some Latin letters transliterated, biochemical symbols spelled out (`Fd*` → `Fd_star`, `ATP/tot` → `ATP_per_tot`), other invalid runs collapsed to `_`, and a `_` suffix for keywords and names generated code reserves. The mapping is idempotent; two names of one model mapping to the same identifier is an error.
 - Entity ids in a model file must already be canonical. Free-form names go into `displayName` ([ADR 0007](0007-presentation-metadata-in-the-model.md)).
 
 ## 3. Rationale

@@ -1,7 +1,7 @@
 # ADR 0012: Analysis Files
 
 **Status:** Experimental
-**Scope:** `v1/analysis.schema.json`, `tests/analysis.fixtures.json`
+**Scope:** `v0/analysis.schema.json`, `tests/analysis.fixtures.json`
 
 ---
 
@@ -25,6 +25,6 @@ Which analyses are possible follows from what the model kind has (time, variable
 
 ## 4. Consequences
 
-- While experimental, the format may change incompatibly within `spec_version` 1.0, an explicit exception to the versioning rule of [ADR 0011](0011-versioning-and-vendoring.md); it becomes subject to that rule once its status leaves Experimental.
+- While experimental, the format may change incompatibly between `spec_version`s, as the whole format may while it is pre-1.0 ([ADR 0011](0011-versioning-and-vendoring.md)).
 - Fitting, sampling and sensitivity analysis are not covered.
 - A rule for when new analysis kinds are added (e.g. only once two tools implement them and reference values pin them down) is under consideration, not decided.

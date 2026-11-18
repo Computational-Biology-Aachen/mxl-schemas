@@ -74,7 +74,7 @@ REACTIONS = {
 }
 
 
-def document(derived: dict, reactions: dict, *, variables=None, parameters=None, readouts=None, spec="1.3") -> dict:
+def document(derived: dict, reactions: dict, *, variables=None, parameters=None, readouts=None, spec="0.4") -> dict:
     return {
         "spec_version": spec,
         "kind": "kinetic",

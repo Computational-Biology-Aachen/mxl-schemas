@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/Computational-Biology-Aachen/mxl-schemas/main/v1/steady-state-model.schema.json",
+  "$id": "https://raw.githubusercontent.com/Computational-Biology-Aachen/mxl-schemas/main/v0/steady-state-model.schema.json",
   "title": "Mxl steady-state model format",
   "description": "Version-controllable JSON representation of an algebraic (steady-state) model, shared between mxlpy and mxlweb. There are no state variables and no time integration: the outputs are closed-form derived quantities of the parameters. Expressions are stored as trees of math nodes from the shared MathML node set.",
   "type": "object",
@@ -17,12 +17,12 @@
     },
     "spec_version": {
       "type": "string",
-      "description": "Version of the .mxl.json format. 1.1 adds units, 1.2 adds data (`data_ref`), 1.3 array-valued derived quantities that depend on parameters, variables or time (ADR 0015); earlier files remain valid.",
+      "description": "Version of the .mxl.json format (pre-1.0: a minor bump may break, see ADR 0011). 0.2 adds units, 0.3 adds data (`data_ref`), 0.4 array-valued derived quantities that depend on parameters, variables or time (ADR 0015); earlier files remain valid.",
       "enum": [
-        "1.0",
-        "1.1",
-        "1.2",
-        "1.3"
+        "0.1",
+        "0.2",
+        "0.3",
+        "0.4"
       ]
     },
     "kind": {

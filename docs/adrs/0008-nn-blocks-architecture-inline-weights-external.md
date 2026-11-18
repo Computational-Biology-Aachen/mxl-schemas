@@ -1,7 +1,7 @@
 # ADR 0008: Neural-Network Blocks: Architecture Inline, Weights External
 
 **Status:** Implemented
-**Scope:** `nn_blocks` in the kinetic and ODE schemas; `v1/nn-weights.schema.json`
+**Scope:** `nn_blocks` in the kinetic and ODE schemas; `v0/nn-weights.schema.json`
 
 ---
 
@@ -13,7 +13,7 @@ Universal differential equations add neural-network terms to a model's dynamics.
 
 - An `nn_blocks` entry holds the architecture: `inputs`, `layers` (each tagged with a `type`, a `width` and an optional activation given as an expression), `seed`, `targets`, `trained`, `scale` and `mechanism`.
 - `mechanism` is an ordinary expression over two placeholders, `ode` (the existing dx/dt term) and `nde` (the block's scaled output); additive, relative and multiplicative composition are presets, not a closed list. Several blocks on one variable compose in order, each taking the previous result as `ode`.
-- Weights are not parameters and are not stored inline. A trained block references a weights file (`weights_ref`, relative to the model file; layout `v1/nn-weights.schema.json`, matrices `[out_features, in_features]`). An untrained block is initialised from `seed`.
+- Weights are not parameters and are not stored inline. A trained block references a weights file (`weights_ref`, relative to the model file; layout `v0/nn-weights.schema.json`, matrices `[out_features, in_features]`). An untrained block is initialised from `seed`.
 
 ## 3. Rationale
 

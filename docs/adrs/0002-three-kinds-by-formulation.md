@@ -1,7 +1,7 @@
 # ADR 0002: Three Model Kinds, Split by Formulation
 
 **Status:** Implemented
-**Scope:** `v1/kinetic-model.schema.json`, `v1/ode-model.schema.json`, `v1/steady-state-model.schema.json`
+**Scope:** `v0/kinetic-model.schema.json`, `v0/ode-model.schema.json`, `v0/steady-state-model.schema.json`
 
 ---
 

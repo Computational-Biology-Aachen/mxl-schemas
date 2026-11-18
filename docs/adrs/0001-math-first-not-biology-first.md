@@ -1,7 +1,7 @@
 # ADR 0001: The Model Is the Mathematics, Not the Biology
 
 **Status:** Implemented
-**Scope:** every model schema (`v1/kinetic-model.schema.json`, `v1/ode-model.schema.json`, `v1/steady-state-model.schema.json`)
+**Scope:** every model schema (`v0/kinetic-model.schema.json`, `v0/ode-model.schema.json`, `v0/steady-state-model.schema.json`)
 
 ---
 

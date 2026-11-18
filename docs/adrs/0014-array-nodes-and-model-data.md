@@ -1,7 +1,7 @@
 # ADR 0014: Array Nodes and Model Data
 
 **Status:** Implemented; the model restriction of §2 is amended by [ADR 0015](0015-array-valued-intermediates.md)
-**Scope:** `$defs/node` in every schema; `data_ref` in the model schemas; `v1/model-data.schema.json`; `$defs/expression` in `v1/analysis.schema.json`; `tests/expressions.fixtures.json`
+**Scope:** `$defs/node` in every schema; `data_ref` in the model schemas; `v0/model-data.schema.json`; `$defs/expression` in `v0/analysis.schema.json`; `tests/expressions.fixtures.json`
 **Supersedes:** [ADR 0013](0013-analysis-expression-strings.md)
 
 ---
@@ -32,13 +32,13 @@ Both need the same small set of operations: element-wise arithmetic over 1-D arr
 
 `Max`/`Min` keep their n-ary, element-wise meaning. That is why the reductions have their own names.
 
-**Model data** is a set of named 1-D arrays. It lives in a sidecar file (`data_ref`, relative to the model file; layout `v1/model-data.schema.json`), as nn weights do ([ADR 0008](0008-nn-blocks-architecture-inline-weights-external.md)). A table is stored as one array per column, and a shared axis such as wavelength is an array of its own.
+**Model data** is a set of named 1-D arrays. It lives in a sidecar file (`data_ref`, relative to the model file; layout `v0/model-data.schema.json`), as nn weights do ([ADR 0008](0008-nn-blocks-architecture-inline-weights-external.md)). A table is stored as one array per column, and a shared axis such as wavelength is an array of its own.
 
 - An array subtree in a model may reference **only data and numbers**. It must reduce to a number before it is used. Each such subtree is therefore a constant: consumers evaluate it once per data set, and simulation, Jacobians and gradients stay scalar.
 - Data are not parameters. Scans, sliders and fits never see them. An analysis or a site changes a model's data by replacing it, the same way it changes a parameter value.
-- Model files with data are `spec_version` 1.2. Files without data are unchanged.
+- Model files with data are `spec_version` 0.3. Files without data are unchanged.
 
-**Analysis expressions are node trees.** The string syntax of ADR 0013 (README: Expressions, plus `simpson(y, x)`) remains the authoring form. mxlweb-core's `parseExpression` is its single reference parser. A file stores the tree, with references as dotted `Name`s (`wt.NPQ`, `param.k`, `data.m`) that the consumer resolves. Analysis files move to `spec_version` 1.1.
+**Analysis expressions are node trees.** The string syntax of ADR 0013 (README: Expressions, plus `simpson(y, x)`) remains the authoring form. mxlweb-core's `parseExpression` is its single reference parser. A file stores the tree, with references as dotted `Name`s (`wt.NPQ`, `param.k`, `data.m`) that the consumer resolves. Analysis files move to a new `spec_version` (1.1 at the time; 0.1 since the renumbering in ADR 0011).
 
 ## 3. Rationale
 
@@ -52,6 +52,6 @@ Both need the same small set of operations: element-wise arithmetic over 1-D arr
 
 ## 4. Consequences
 
-- Analysis files are no longer valid with string expressions. The analysis format is experimental (ADR 0012), so this is a format change under the same `v1/` directory rather than a new major version.
+- Analysis files are no longer valid with string expressions. The analysis format is experimental (ADR 0012), so this is a format change under the same `v0/` directory rather than a new major version.
 - An array subtree that references a parameter or variable is rejected. Lifting that restriction means evaluating array subtrees inside the right-hand side.
 - `tests/expressions.fixtures.json` pins the parser (`src` to `tree`) and the evaluator (`tree` to `value`) across languages.

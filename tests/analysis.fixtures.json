@@ -1,11 +1,11 @@
 {
- "$comment": "Analysis documents (v1/analysis.schema.json) with whether a validator must accept them; invalid cases each break one rule.",
+ "$comment": "Analysis documents (v0/analysis.schema.json) with whether a validator must accept them; invalid cases each break one rule.",
  "cases": [
   {
    "name": "kinetic, every section",
    "valid": true,
    "document": {
-    "spec_version": "1.1",
+    "spec_version": "0.1",
     "kind": "analysis",
     "model": {
      "model_id": "m",
@@ -432,7 +432,7 @@
    "name": "ode: time course, initial values, response coefficients, stability",
    "valid": true,
    "document": {
-    "spec_version": "1.1",
+    "spec_version": "0.1",
     "kind": "analysis",
     "model": {
      "model_id": "m",
@@ -477,7 +477,7 @@
    "name": "steady-state: evaluation, scan, response coefficients, column op",
    "valid": true,
    "document": {
-    "spec_version": "1.1",
+    "spec_version": "0.1",
     "kind": "analysis",
     "model": {
      "model_id": "m",
@@ -566,7 +566,7 @@
    "name": "steady-state: no time course",
    "valid": false,
    "document": {
-    "spec_version": "1.1",
+    "spec_version": "0.1",
     "kind": "analysis",
     "model": {
      "model_id": "m",
@@ -589,7 +589,7 @@
    "name": "steady-state: no time course in a scenario",
    "valid": false,
    "document": {
-    "spec_version": "1.1",
+    "spec_version": "0.1",
     "kind": "analysis",
     "model": {
      "model_id": "m",
@@ -619,7 +619,7 @@
    "name": "steady-state: no initial values",
    "valid": false,
    "document": {
-    "spec_version": "1.1",
+    "spec_version": "0.1",
     "kind": "analysis",
     "model": {
      "model_id": "m",
@@ -643,7 +643,7 @@
    "name": "steady-state: no stability",
    "valid": false,
    "document": {
-    "spec_version": "1.1",
+    "spec_version": "0.1",
     "kind": "analysis",
     "model": {
      "model_id": "m",
@@ -663,7 +663,7 @@
    "name": "steady-state: no elasticities",
    "valid": false,
    "document": {
-    "spec_version": "1.1",
+    "spec_version": "0.1",
     "kind": "analysis",
     "model": {
      "model_id": "m",
@@ -691,7 +691,7 @@
    "name": "steady-state: no time-series ops",
    "valid": false,
    "document": {
-    "spec_version": "1.1",
+    "spec_version": "0.1",
     "kind": "analysis",
     "model": {
      "model_id": "m",
@@ -715,7 +715,7 @@
    "name": "ode: no removeReaction",
    "valid": false,
    "document": {
-    "spec_version": "1.1",
+    "spec_version": "0.1",
     "kind": "analysis",
     "model": {
      "model_id": "m",
@@ -741,7 +741,7 @@
    "name": "ode: no elasticities",
    "valid": false,
    "document": {
-    "spec_version": "1.1",
+    "spec_version": "0.1",
     "kind": "analysis",
     "model": {
      "model_id": "m",
@@ -769,7 +769,7 @@
    "name": "unknown field",
    "valid": false,
    "document": {
-    "spec_version": "1.1",
+    "spec_version": "0.1",
     "kind": "analysis",
     "model": {
      "model_id": "m",
@@ -787,7 +787,7 @@
    "name": "column op needs expr",
    "valid": false,
    "document": {
-    "spec_version": "1.1",
+    "spec_version": "0.1",
     "kind": "analysis",
     "model": {
      "model_id": "m",
@@ -810,7 +810,7 @@
    "name": "scan needs columns",
    "valid": false,
    "document": {
-    "spec_version": "1.1",
+    "spec_version": "0.1",
     "kind": "analysis",
     "model": {
      "model_id": "m",
@@ -836,7 +836,7 @@
    "name": "scan can't run a protocol",
    "valid": false,
    "document": {
-    "spec_version": "1.1",
+    "spec_version": "0.1",
     "kind": "analysis",
     "model": {
      "model_id": "m",
