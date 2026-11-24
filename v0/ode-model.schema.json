@@ -84,7 +84,7 @@
         },
         "nn_blocks": {
           "type": "object",
-          "description": "UDE/NODE correction terms keyed by name (mxlweb ADR 0005, v2 layout). Trained weight/bias values are never stored as ordinary parameters or inline here — they live in an external per-block JSON sidecar file (see nn-weights.schema.json) referenced by each block's weights_ref, keeping numeric weights structurally separate from parameters that carry kinetic/biological meaning. This section records the architecture and composition needed to regenerate, re-edit, or evaluate a block, and is optional — a document with no NN blocks simply omits it.",
+          "description": "UDE/NODE correction terms keyed by name (mxlweb ADR 0005, v2 layout). Trained weight/bias values are never stored as ordinary parameters or inline here — they live in an external per-block JSON sidecar file (see nn-weights.schema.json) referenced by each block's weights_ref, keeping numeric weights structurally separate from parameters that carry kinetic/biological meaning. This section records the architecture and composition needed to regenerate, re-edit, or evaluate a block, and is optional — a document with no NN blocks simply omits it. On one target, all terms apply before any nn_blocks entry, each section in its own order.",
           "additionalProperties": {
             "$ref": "#/$defs/nnBlock"
           }
@@ -817,7 +817,7 @@
     },
     "term": {
       "type": "object",
-      "description": "A term rewriting a variable's dx/dt or (kinetic only) a reaction's rate through `mechanism` (spec_version 0.5, ADR 0008 §6). Terms on the same target compose in insertion order, each taking the previous result as `ode`. A variable term acts on the assembled dx/dt (all reaction rates, including those corrected by reaction terms, times their stoichiometry); a reaction term rewrites the rate before the stoichiometry fans it out. Terms never enter the stoichiometric matrix. The term's contribution, mechanism(prev, term) - prev, is a quantity named after the term that readouts can read.",
+      "description": "A term rewriting a variable's dx/dt or (kinetic only) a reaction's rate through `mechanism` (spec_version 0.5, ADR 0008 §6). Terms on the same target compose in section order, each taking the previous result as `ode`; all terms of a target apply before its nn_blocks. A variable term acts on the assembled dx/dt (all reaction rates, including those corrected by reaction terms, times their stoichiometry); a reaction term rewrites the rate before the stoichiometry fans it out. Terms never enter the stoichiometric matrix. The term's contribution, mechanism(prev, term) - prev, is a quantity named after the term that readouts can read.",
       "required": [
         "fn",
         "target",
