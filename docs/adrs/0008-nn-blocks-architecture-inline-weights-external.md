@@ -40,7 +40,7 @@ Universal differential equations add neural-network terms to a model's dynamics.
 
 - `hidden_states: n` makes a block own `n` states `{block}_h0 … {block}_h{n-1}`, appended to the state vector after the model's variables: `dh/dt = NN(inputs / input_scales, h)`, the final layer has `n` units. Target `k` gets `(W h)_k` (times `scale`, if given) as `nde`. `W` (`[targets, n]`) and `h0` live in the weights file next to `w1`, `b1`, …; an untrained block starts at `h0 = 0`.
 - `scale` is required for blocks without hidden states (unchanged) and optional with them (absent means no scaling): the readout `W` already sets the magnitude of the correction.
-- `input_scales` (one positive constant per input, default 1) normalises inputs of very different magnitudes for any block.
+- `input_scales` (one positive constant per input, default 1) normalises inputs of very different magnitudes for any block; `output_scales` (one positive constant per target, default 1) multiplies each target's `nde`, so the weights stay dimensionless when a target's natural scale is a rate.
 - `terms` holds generic terms: an expression `fn`, a `target` (variable, or reaction for kinetic models, `target_kind`) and a `mechanism` over `ode`/`nde`, composing in insertion order like blocks. A variable term acts on the assembled dx/dt, a reaction term rewrites the rate before the stoichiometry fans it out. A term's contribution `mechanism(prev, term) - prev` is a quantity named after the term. Terms, like blocks, never enter the stoichiometric matrix.
 - Weight names, for fits and the simulator, follow mxlweb-core: `{block}_w{l}_{i}_{j}`, `{block}_b{l}_{i}` (0-indexed layer `l`), and `{block}_W_{k}_{i}` for the readout.
 

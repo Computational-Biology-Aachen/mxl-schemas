@@ -194,6 +194,14 @@
             "exclusiveMinimum": 0
           },
           "description": "Constants the inputs are divided by before the first layer, one per entry of `inputs` (spec_version 0.5). Absent means 1 for every input."
+        },
+        "output_scales": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "description": "Constants each target's `nde` is multiplied by, one per entry of `targets` (spec_version 0.5), e.g. a characteristic rate so that the weights stay dimensionless. Absent means 1 for every target."
         }
       },
       "allOf": [
