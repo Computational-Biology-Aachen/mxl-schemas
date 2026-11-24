@@ -42,6 +42,7 @@ Every model file shares the same outer shape:
 | `derived`    |   ✓     | ✓   |      ✓       |
 | `readouts`   |   ✓     | ✓   |      —       |
 | `nn_blocks`  |   ✓     | ✓   |      —       |
+| `terms`      |   ✓     | ✓   |      —       |
 
 - **variables** — state variables with an initial `value`; in the ODE format each also carries its derivative `fn`.
 - **parameters** — constants with a `value`.
@@ -53,6 +54,9 @@ Every model file shares the same outer shape:
   This section records the architecture needed to regenerate, re-edit, or evaluate a block: `inputs`, `layers` (a `{type, width, activation?}` stack — only `type: "dense"` exists today, but every layer is tagged so a future layer kind is a new variant rather than a restructure), `seed`, `targets`, `trained`, `scale` (the block's initial output-scaling factor), and `mechanism`. Each layer's optional `activation` is a `{name, expression}` pair — `expression` is a portable MathML definition over a single placeholder `x`, `name` lets a backend with its own native implementation, e.g. `"softplus"`, skip evaluating it node-by-node. A layer with no `activation` is a plain linear combination (can take any real value) — the common case for the final layer, but any layer, including the final one, may carry a non-identity activation; there is no separate block-level activation field.
 
   Weight/bias values are **not** parameters and are **not** stored inline: they live in an external per-block JSON sidecar file (`v0/nn-weights.schema.json`), keyed `w1`/`b1`/`w2`/`b2`/… per layer (1-indexed, matching `layers`), each weight matrix shaped `[out_features, in_features]` (PyTorch/equinox-native — a Keras-backed consumer transposes on import/export). A trained block (`trained: true`) requires `weights_ref`, a path to that sidecar relative to the `.mxl.json` file itself; an untrained block (`trained: false`) forbids `weights_ref` and is initialized from `seed` instead. This split — architecture in the human-readable/diffable model file, weight values in a separate file — mirrors the common pattern across ONNX's `external_data`, HuggingFace's `config.json`/`*.safetensors` split, and glTF's external-buffer mode; unlike those, both files here stay plain JSON since nn_blocks are meant to be small correction nets, not large deep networks. Omitted from the steady-state format, which has no dynamics for a correction term to feed into.
+
+  Since spec_version 0.5 a block may own `hidden_states` (latent states driven by the network, `dh/dt = NN(inputs / input_scales, h)`, targets read the readout `W h`; `W` and `h0` are stored in the weights file) and every block may normalise its inputs with `input_scales`. See ADR 0008 §6.
+- **terms** (spec_version 0.5) — generic terms rewriting a variable's dx/dt or (kinetic only) a reaction's rate: an expression `fn`, a `target` with `target_kind` and a `mechanism` over `ode`/`nde`, composing in insertion order like `nn_blocks`. A term's contribution `mechanism(prev, term) - prev` is a quantity named after the term. See ADR 0008 §6.
 
 ### Presentation metadata
 

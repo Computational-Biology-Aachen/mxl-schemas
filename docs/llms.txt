@@ -223,6 +223,10 @@ Expressions are node trees (ADR 0014): the model node set, with references as do
 
 `data_ref` (spec_version 0.3) names a sidecar (`model-data.schema.json`): `{"<id>": {"values": [...], "unit"?, "description"?}}`, 1-D arrays. Array subtrees in a model reference only data and numbers and reduce to a number, so they are constants.
 
+## Terms and neural blocks
+
+`nn_blocks` add a small dense network onto variables' dx/dt (or, kinetic only, reaction rates) through `mechanism`, an expression over `ode` (the target so far) and `nde` (the block's output); weights live in a sidecar (`nn-weights.schema.json`, `w1`/`b1`/…, `[out, in]`). Since spec_version 0.5 a block may own `hidden_states: n` (`dh/dt = NN(inputs / input_scales, h)`, targets read `(W h)_k`; `W` and `h0` in the sidecar, states `{block}_h{i}` after the model's variables), and `terms` holds generic terms `{fn, target, target_kind, mechanism}`. Blocks and terms on one target compose in insertion order and never enter the stoichiometric matrix (ADR 0008).
+
 ## Installation & usage
 
 ### npm (schema package)
